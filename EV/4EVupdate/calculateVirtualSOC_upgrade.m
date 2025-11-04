@@ -87,8 +87,8 @@ function EV = calculateVirtualSOC_upgrade(EV, t, dt)
     % 6) 计算修正虚拟 SOC (S_modified)
     persistent alpha1 alpha2 % 使用 persistent
     if isempty(alpha1)
-        alpha1 = 0.8; %
-        alpha2 = 0.2; %
+        alpha1 = 1; %
+        alpha2 = 0; %
     end
     EV.S_modified = alpha1 * EV.S_original + alpha2 * I_value; %
 end
