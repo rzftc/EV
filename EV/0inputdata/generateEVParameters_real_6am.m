@@ -9,18 +9,18 @@ function generateEVParameters_real_6am(filePath, numEV, areaRatio, varargin)
 %       'AreaType'    : 区域类型['居民区','工作区','混合']（默认'混合'）
 %% 使用范例
 % 生成200辆工作区特斯拉
-% generateEVParameters_real_choose('tesla_work.xlsx', 200, 0,...
+% generateEVParameters_real_6am('tesla_work.xlsx', 200, 0,...
 %     'ModelNames', {'特斯拉Model Y'},...
 %     'AreaType', '工作区');
 %
 % % 生成500辆居民区比亚迪
-% generateEVParameters_real_choose('byd_res.xlsx', 500, 1,...
+% generateEVParameters_real_6am('byd_res.xlsx', 500, 1,...
 %     'ModelNames', {'比亚迪秦PLUS DM-i','比亚迪海鸥'},...
 %     'AreaType', '居民区');
 % % 生成1000辆混合区域车辆（30%居民区+70%工作区）
-% generateEVParameters_real_choose('mixed_area.xlsx', 1000, 0.3,...
+% generateEVParameters_real_6am('mixed_area.xlsx', 1000, 0.3,...
 %     'AreaType', '混合');
-%  generateEVParameters_real_choose('resi_inc_1000.xlsx', 1000, 0,...
+%  generateEVParameters_real_6am('resi_inc_1000.xlsx', 1000, 0,...
 % 'AreaType', '居民区');
 
 %% 参数解析系统
@@ -122,15 +122,40 @@ for i = 1:numEV
         timeSlots = workplace_timeSlots;
     end
     
-    % 参数约束验证循环
+    % -------------------- (修改开始) --------------------
+    
+    % (步骤 1: 预先生成 E, eta)
+    % (从原代码 lines 195, 201, 202 移动到此处)
+    data.eta(i) = 0.85 + 0.1*rand();  % 充电效率
+    data.E_ini(i) = data.C(i) * (0.1 + 0.3*rand());       % 初始电量10%-40%
+    data.E_tar_set(i) = data.C(i) * (0.8 + 0.1999*rand()); % 目标电量80%-99.99%
+
+    % (步骤 2: 计算真正的最小充电时间)
+    delta_E = data.E_tar_set(i) - data.E_ini(i);
+    if delta_E <= 0 || data.P_N(i) == 0 || data.eta(i) == 0
+        t_min_charge_minutes = 0;
+    else
+        % 使用实际 eta 和 P_N 计算
+        t_min_charge_minutes = (delta_E / (data.eta(i) * data.P_N(i))) * 60;
+    end
+    % 最小持续时间 (确保 t_dep > t_in)
+    t_min_duration_minutes = max(1, ceil(t_min_charge_minutes)); % 至少停1分钟
+
+    % 定义时间窗口
+    simulation_start_minutes = 6 * 60; % 360
+    max_departure_minutes = 30 * 60; % 1800
+    
+    % (步骤 3: 循环验证，直到找到满足所有约束的时间)
     valid = false;
+    loop_count = 0; % 防止死循环
+    
     while ~valid
-        % 1. 生成入网时间 (基于正态分布)
+        % 3a. 生成入网时间 (基于正态分布, 0-1439 min)
         generated_hour_float = mean_arrival_h + std_dev_h * randn();
         t_in_h_float_daily = mod(generated_hour_float, 24);
         t_in_minute = round(t_in_h_float_daily * 60);
         
-        % 2. 确定停车时长
+        % 3b. 确定统计停车时长 (dep_add_minute_statistical)
         t_in_h_for_slot_lookup = floor(t_in_h_float_daily);
         currentSlot = timeSlots{find(cellfun(@(x) ismember(t_in_h_for_slot_lookup, x.range), timeSlots),1)};
         
@@ -148,30 +173,38 @@ for i = 1:numEV
         else
             duration_h = minDur_h + (maxDur_h - minDur_h) * rand();
         end
-        dep_add_minute = round(duration_h * 60);
+        dep_add_minute_statistical = round(duration_h * 60);
         
-        % 3. 验证充电可行性
-        % 临时设置初始和目标电量用于验证，最终值在后面统一生成
-        temp_E_ini = data.C(i) * (0.1 + 0.3*rand());
-        temp_E_tar = data.C(i) * (0.8 + 0.1999*rand());
-        
-        delta_E = temp_E_tar - temp_E_ini;
-        
-        % 确保停车时长至少能完成充电
-        t_min_charge = (delta_E / (0.9 * data.P_N(i))) * 60; % 假设平均效率0.9
-        dep_add_minute = max(dep_add_minute, ceil(t_min_charge) + 1);
-        
-        if dep_add_minute > 0
-            m3 = delta_E / (0.9 * (dep_add_minute / 60));
-            valid = (data.P_N(i) > m3);
+        % 3c. 确定最终所需时长 (必须满足最小充电时间 和 最小停车1分钟)
+        final_duration_minutes = max(dep_add_minute_statistical, t_min_duration_minutes);
+
+        % 3d. 应用 6:00 (360) 平移
+        if t_in_minute < simulation_start_minutes
+            t_in_shifted = t_in_minute + (24 * 60); % (1440-1799)
         else
-            valid = true; % 0时长停车直接通过
+            t_in_shifted = t_in_minute; % (360-1439)
         end
-    end
+        
+        % 3e. 计算期望的 t_dep
+        t_dep_calculated = t_in_shifted + final_duration_minutes;
+        
+        % 3f. 验证是否满足 30:00 (1800) 约束
+        if (t_dep_calculated <= max_departure_minutes)
+            % 成功: 最终时长满足 30:00 限制
+            valid = true;
+            data.t_in(i) = t_in_shifted;
+            data.t_dep(i) = t_dep_calculated;
+        else
+            % 失败: t_in + final_duration > 1800. 重新生成 t_in.
+            valid = false;
+            loop_count = loop_count + 1;
+            if loop_count > 100 % 安全退出
+                error('EV%d (P_N=%.1f) 无法在 6:00-30:00 窗口内找到满足 %.1f kWh (t_min=%.1f min) 的时隙。', i, data.P_N(i), delta_E, t_min_duration_minutes);
+            end
+        end
+    end % 结束 while ~valid
     
-    data.t_in(i) = t_in_minute;
-    data.t_dep(i) = t_in_minute + dep_add_minute;
-    % 跨天逻辑 (如果t_dep超过24*60=1440分钟，它会自动延续到下一天)
+    % -------------------- (修改结束) --------------------
 end
 
 %% 电价参数系统（保持不变）
@@ -191,123 +224,37 @@ data.Delta_E_q_max = 0.05 * data.C; % 低功率区能量变化
 price_std = 0.1;
 data.p_real = data.P_0 + price_std * randn(numEV,1);
 
-%% 其他参数系统（保持不变）
-data.eta = 0.85 + 0.1*rand(numEV,1);  % 充电效率
+%% 其他参数系统
+% data.eta (已上移)
 data.r = 0.05 * ones(numEV,1);        % SOC调节系数
 data.state = repmat("LockOFF", numEV,1);  % 初始状态
 
 %% 电量参数生成
-data.E_ini = data.C .* (0.1 + 0.3*rand(numEV,1));       % 初始电量10%-40%
-data.E_tar_set = data.C .* (0.8 + 0.1999*rand(numEV,1)); % 目标电量80%-99.99%
+% data.E_ini (已上移)
+% data.E_tar_set (已上移)
 
-% 最终验证修复：确保生成的E_ini和E_tar_set满足时间约束
-for i = 1:numEV
-    delta_E = data.E_tar_set(i) - data.E_ini(i);
-    duration_min = data.t_dep(i) - data.t_in(i);
-    if duration_min > 0
-        required_power = delta_E / (data.eta(i) * (duration_min / 60));
-        if required_power >= data.P_N(i)
-            % 如果不满足，适当降低E_tar_set或提高E_ini
-            max_charge_E = data.P_N(i) * data.eta(i) * (duration_min / 60);
-            if (data.C(i) * 0.95 - data.E_ini(i)) > max_charge_E
-                data.E_tar_set(i) = data.E_ini(i) + max_charge_E * (0.8 + 0.2*rand());
-            else
-                data.E_ini(i) = data.E_tar_set(i) - max_charge_E * (0.8 + 0.2*rand());
-                data.E_ini(i) = max(data.E_ini(i), data.C(i) * 0.05); % 防止初始电量过低
-            end
-        end
-    end
-end
+% -------------------- (修改) --------------------
+% (删除原 '最终验证修复' 循环 (原 lines 205-233), 
+% 因为验证逻辑已在 'while ~valid' 循环中处理，
+% 且 E_tar_set 不应被修改)
+% -------------------- (修改结束) --------------------
 
 
 %% 时间生成系统（增强约束验证）
-% hour_edges = cumsum([0,5,4,7,2,6])/24; % [0,5,9,16,18,24]小时
-% [~, hour_groups] = histc(rand(numEV,1), hour_edges);
-% time_labels = {'0-4','5-8','9-15','16-17','18-23'};
-%
-% residential_weights = [
-%     0.70, 0.20, 0.10;   % 0-4时
-%     0.20, 0.70, 0.10;   % 5-8时
-%     0.10, 0.20, 0.70;   % 9-15时
-%     0.20, 0.70, 0.10;   % 16-17时
-%     0.70, 0.20, 0.10    % 18-23时
-% ];
-%
-% workplace_weights = [
-%     0.10, 0.20, 0.70;   % 0-4时
-%     0.20, 0.10, 0.70;   % 5-8时
-%     0.20, 0.70, 0.10;   % 9-15时
-%     0.10, 0.20, 0.70;   % 16-17时
-%     0.10, 0.20, 0.70    % 18-23时
-% ];
-
-% data.t_in = zeros(numEV,1);
-% data.t_dep = zeros(numEV,1);
-%
-% for i = 1:numEV
-%     group = hour_groups(i);
-%     time_range = sscanf(time_labels{group},'%d-%d')*60;
-%
-%     % 入网时间生成
-%     data.t_in(i) = randi([time_range(1), time_range(2)]);
-%
-%     % 区域权重选择
-%     if strcmp(data.Area(i), "居民区")
-%         time_weights = residential_weights(group,:);
-%     else
-%         time_weights = workplace_weights(group,:);
-%     end
-%
-%     % 参数约束验证循环
-%     valid = false;
-%     while ~valid
-%         % 停车时长选择
-%         dur_probs = cumsum(time_weights);
-%         dur_type = find(rand() <= dur_probs, 1);
-%
-%         % 持续时间生成
-%         switch dur_type
-%             case 1 % 长时停车
-%                 dep_add = randi([9*60, 24*60]);
-%             case 2 % 中时停车
-%                 dep_add = randi([4*60, 8*60]);
-%             case 3 % 短时停车
-%                 dep_add = randi([0, 3*60]);
-%         end
-%
-%         % 计算最小充电时间
-%         delta_E = data.E_tar_set(i) - data.E_ini(i);
-%         t_min = (delta_E/(data.eta(i)*data.P_N(i)))*60;
-%         dep_add = max(dep_add, ceil(t_min) + 1); % 增加1分钟缓冲
-%
-%         % 验证功率约束
-%         m3 = delta_E/(data.eta(i)*(dep_add/60));
-%         valid = (data.P_N(i) > m3);
-%
-%         % 异常处理
-%         if dep_add > 24*60*3 % 超过3天
-%             error('EV%d生成异常: dep_add=%d', i, dep_add);
-%         end
-%     end
-%
-%     % 处理跨天逻辑
-%     data.t_dep(i) = data.t_in(i) + dep_add;
-%     data.t_dep(i) = data.t_dep(i) + 1440 * floor(data.t_in(i)/1440);
-%
-%     % 时间顺序验证
-%     assert(data.t_dep(i) > data.t_in(i), '时间异常 EV%d: t_in=%d, t_dep=%d', i, data.t_in(i), data.t_dep(i));
-% end
+% ... (原代码中此节已被注释) ...
 
 %% 数据完整性验证
 valid_C = [18.32,26.86,30.08,38.88,50.12,60.0,60.48,78.4];
 valid_PN = [6.6,7,11,40,60,70,90,250];
 assert(all(ismember(data.C,valid_C)),'电池容量校验失败');
 assert(all(ismember(data.P_N,valid_PN)),'充电功率校验失败');
-assert(all(data.t_dep > data.t_in),'时间顺序校验失败');
+assert(all(data.t_dep > data.t_in),'时间顺序校验失败 (t_dep > t_in)');
 
 % 功率约束最终验证
 m3_all = (data.E_tar_set - data.E_ini)./(data.eta.*(data.t_dep - data.t_in)/60);
-assert(all(data.P_N > m3_all),'存在不满足P_N>m3的情况');
+m3_all(isnan(m3_all)) = 0; % 处理 (E_tar==E_ini) / (duration > 0) 导致的 0/t = 0
+m3_all(m3_all < 0) = 0; % 处理 (E_tar < E_ini) 的情况
+assert(all(data.P_N >= m3_all),'存在不满足P_N >= m3 (平均所需功率) 的情况');
 
 %% 数据存储
 writetable(data, filePath);
@@ -315,4 +262,10 @@ fprintf('EV数据生成完成：%s\n居民区：%d辆（%.1f%%）\n工作区：%
     filePath,...
     sum(isResidential), 100*mean(isResidential),...
     sum(~isResidential), 100*mean(~isResidential));
+
+% (新增) 打印时间范围进行验证
+fprintf('时间范围校验:\nMin t_in: %.2f (%.2f H)\nMax t_in: %.2f (%.2f H)\n',...
+    min(data.t_in), min(data.t_in)/60, max(data.t_in), max(data.t_in)/60);
+fprintf('Min t_dep: %.2f (%.2f H)\nMax t_dep: %.2f (%.2f H)\n',...
+    min(data.t_dep), min(data.t_dep)/60, max(data.t_dep), max(data.t_dep)/60);
 end
