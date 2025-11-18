@@ -2,7 +2,7 @@ clc; clear; close all;
 rng(2024);
 
 %% ===================== 初始化参数 =====================
-excelFile = 'resi_1000.xlsx';
+excelFile = 'resi_inc_10000.xlsx';
 if ~exist(excelFile, 'file')
     generateEVParameters_real(excelFile, 100, 0.6);
     fprintf('已生成参数模板: %s\n', excelFile);

@@ -1,4 +1,6 @@
+% load('results_inc_10000.mat');
 load('result_1000_inc.mat');
+
 [EVs, t_sim, dt_short, dt_long, P_tar] = initializeFromExcel(excelFile);
 num_long_steps = t_sim / dt_long;
 num_short_per_long = dt_long / dt_short;
@@ -33,5 +35,5 @@ legend('Location', 'best');
 set(gca, 'FontSize', 12);
 hold off;
 
-% plotLambdaAndAggSOC(results, dt_short);
-% plotPowerComparison(results, dt_short);
+plotLambdaAndAggSOC(results, dt_short);
+plotPowerComparison(results, dt_short);
