@@ -8,7 +8,7 @@ clc; clear; close all;
 rng(2024);
 
 %% 初始化参数
-excelFile = 'mixed_area.xlsx';
+excelFile = 'resi_inc_1000.xlsx';
 if ~exist(excelFile, 'file')
     generateEVParameters_real(excelFile, 1000, 1.0);
     fprintf('已生成参数模板: %s\n', excelFile);
@@ -17,8 +17,8 @@ end
 fprintf('成功加载%d辆EV数据\n', length(EVs));
 
 %% 时间参数定义
-dt_short = 15;     % 短时间步长 (分钟)
-dt_long = 60;       % 长时间步长 (分钟)
+dt_short = 3;     % 短时间步长 (分钟)
+dt_long = 30;       % 长时间步长 (分钟)
 simulation_start_hour = 6;
 simulation_end_hour   = 30;
 dt = dt_short / 60;       % 短步长 (小时)
@@ -307,7 +307,7 @@ end % 结束 long_idx
 results.P_tar = repelem(P_tar, num_short_per_long);
 
 %% 结果保存与可视化
-outputFileName = 'main_potential_agg_vs_individual_sum_results.mat'; % (文件名保持不变，但内容已更新)
+outputFileName = 'main_potential_agg_vs_individual_sum_results2.mat'; % (文件名保持不变，但内容已更新)
 fprintf('\n正在保存结果到 %s ...\n', outputFileName);
 try
     save(outputFileName, 'results', '-v7.3');
@@ -316,20 +316,19 @@ catch ME_save
     fprintf('*** 保存结果文件时出错: %s ***\n', ME_save.message);
 end
 
-% % (修改) 仅保留潜力对比可视化
-% figure;
-% plot(time_points_absolute, results.EV_Up, 'r-', 'LineWidth', 1.5, 'DisplayName', '聚合模型 上调潜力 (results.EV_Up)');
-% hold on;
-% plot(time_points_absolute, results.EV_Down, 'b-', 'LineWidth', 1.5, 'DisplayName', '聚合模型 下调潜力 (results.EV_Down)');
-% plot(time_points_absolute, results.EV_Up_Individual_Sum, 'r--', 'LineWidth', 1.5, 'DisplayName', '单体求和 上调潜力 (results.EV_Up_Individual_Sum)');
-% plot(time_points_absolute, results.EV_Down_Individual_Sum, 'b--', 'LineWidth', 1.5, 'DisplayName', '单体求和 下调潜力 (results.EV_Down_Individual_Sum)');
-% % (新增) 绘制新添加的 M x T 个体潜力矩阵的 *总和*，用于验证
-% plot(time_points_absolute, sum(results.EV_Up_Individual, 1), 'c:', 'LineWidth', 2, 'DisplayName', '新增(M x T)个体上调之和 (sum(results.EV_Up_Individual))');
-% plot(time_points_absolute, sum(results.EV_Down_Individual, 1), 'm:', 'LineWidth', 2, 'DisplayName', '新增(M x T)个体下调之和 (sum(results.EV_Down_Individual))');
-% xlabel('Time (hours)');
-% ylabel('Potential (kW)');
-% title('EV 调节潜力对比: 聚合模型 vs 单体求和');
-% legend;
-% grid on;
-% 
+% (修改) 仅保留潜力对比可视化
+figure;
+plot(time_points_absolute, results.EV_Up, 'r-', 'LineWidth', 1.5, 'DisplayName', '聚合模型 上调潜力 (results.EV_Up)');
+hold on;
+plot(time_points_absolute, results.EV_Down, 'b-', 'LineWidth', 1.5, 'DisplayName', '聚合模型 下调潜力 (results.EV_Down)');
+plot(time_points_absolute, results.EV_Up_Individual_Sum, 'r--', 'LineWidth', 1.5, 'DisplayName', '单体求和 上调潜力 (results.EV_Up_Individual_Sum)');
+plot(time_points_absolute, results.EV_Down_Individual_Sum, 'b--', 'LineWidth', 1.5, 'DisplayName', '单体求和 下调潜力 (results.EV_Down_Individual_Sum)');
+% (新增) 绘制新添加的 M x T 个体潜力矩阵的 *总和*，用于验证
+
+xlabel('Time (hours)');
+ylabel('Potential (kW)');
+title('EV 调节潜力对比: 聚合模型 vs 单体求和');
+legend;
+grid on;
+
 % % (已移除) 单车SOC和功率对比的可视化代码
