@@ -3,7 +3,16 @@
 %
 % 描述:
 %   此脚本加载由 main_potential_agg_ind2.m 生成的 .mat 文件,
-%   并从零开始重新绘制四张关键结果图。
+%   并从零开始重新绘制五张关键结果图（含算例A和B）。
+%
+% 核心要求:
+%   1. 不调用 /5plot/ 目录下的函数。
+%   2. 不绘制任何“趋势”线 (no movmean)。
+%   3. X坐标轴必须明确显示为 D1 6:00 至 D2 6:00 (即 6 到 30 小时)。
+%   4. 去掉标题，保存为高dpi png，文件名中文。
+%
+% 依赖:
+%   'main_potential_agg_vs_individual_sum_results2.mat'
 %% --------------------------------------------------
 
 clc;
@@ -26,7 +35,7 @@ fprintf('结果加载完毕。\n');
 % 仿真参数 (必须与 main_potential_agg_ind.m 匹配)
 dt_short = 3; % 默认短步长为 3 分钟
 simulation_start_hour = 6; % 仿真开始时间
-selected_ev = 824; % 选择绘制的EV编号
+selected_ev = 825; % 选择绘制的EV编号
 
 % 计算时间轴 (小时)
 total_steps = length(results.lambda);
@@ -74,47 +83,6 @@ legend('Location', 'northeast', 'FontSize', 12);
 % 保存图像 (无标题，高DPI，中文名)
 print(fig1, '功率跟踪效果分析.png', '-dpng', '-r600');
 
-
-% %% --------------------------------------------------
-% % 图 2: Lambda 与 聚合SOC 协同分析
-% % 保存为: 聚合SOC与Lambda.png
-% % --------------------------------------------------
-% fprintf('正在绘制图 2 (聚合SOC vs Lambda)...\n');
-% fig2 = figure('Name', 'Lambda与聚合SOC协同', 'Position', [150 150 1000 400], 'NumberTitle', 'off');
-% 
-% % 左侧坐标轴（聚合SOC）
-% yyaxis left;
-% main_soc_agg = plot(time_hours, results.S_agg, ...
-%     'LineWidth', 1.2, ...
-%     'Color', [0.1 0.5 0.2], ...
-%     'DisplayName', '聚合SOC');
-% ylabel('聚合SOC (-1~1)', 'FontSize', 16, 'Color', [0.1 0.5 0.2]);
-% ylim([-2,2]);
-% set(gca, 'YColor', [0.1 0.5 0.2]);
-% 
-% % 右侧坐标轴（Lambda）
-% yyaxis right;
-% main_lambda_agg = plot(time_hours, results.lambda, ...
-%     'LineWidth', 1.2, ...
-%     'Color', [0.2 0.4 0.8], ...
-%     'DisplayName', '\lambda^*');
-% ylabel('\lambda^*', 'FontSize', 16, 'Color', [0.2 0.4 0.8]);
-% % 动态设置Y轴范围
-% lambda_min = floor(min(results.lambda) * 2) / 2;
-% lambda_max = ceil(max(results.lambda) * 2) / 2;
-% ylim([-2, 2]);
-% set(gca, 'YColor', [0.2 0.4 0.8]);
-% 
-% % 公共设置
-% xlabel('时间 (小时)', 'FontSize', 14);
-% set(gca, 'FontSize', 12);
-% xlim([simulation_start_hour, simulation_start_hour + 24]); % [6, 30]
-% set(gca, 'XTick', x_ticks, 'XTickLabel', x_tick_labels);
-% grid on;
-% legend([main_soc_agg, main_lambda_agg], 'Location', 'best', 'FontSize', 12);
-% 
-% % 保存图像 (无标题，高DPI，中文名)
-% print(fig2, '聚合SOC与Lambda.png', '-dpng', '-r600');
 
 
 %% --------------------------------------------------
@@ -191,7 +159,6 @@ else
     % 坐标轴和标签设置
     xlabel('时间 (小时)', 'FontSize', 14);
     ylabel('电量 (kWh)', 'FontSize', 14);
-    % title(sprintf('EV %d 充电电量随时间变化对比', selected_ev), 'FontSize', 14); % 已移除标题
     set(gca, 'FontSize', 12);
     xlim([simulation_start_hour, simulation_start_hour + 24]); % [6, 30]
     set(gca, 'XTick', x_ticks, 'XTickLabel', x_tick_labels);
@@ -201,5 +168,112 @@ else
     % 保存图像 (无标题，高DPI，中文名)
     print(fig4, '单体电量对比.png', '-dpng', '-r600');
 end
+
+%% --------------------------------------------------
+% 算例 A (图 5): 用户行为不确定性分布 (入网/离网时间)
+% 保存为: 用户行为分布.png
+% --------------------------------------------------
+fprintf('正在绘制图 5 (用户行为分布)...\n');
+
+if ~isfield(results, 'EV_t_in') || ~isfield(results, 'EV_t_dep')
+    warning('结果文件中缺少时间分布数据 (EV_t_in 或 EV_t_dep)。跳过图 5 绘制。');
+else
+    fig5 = figure('Name', '用户行为不确定性分布', 'Position', [300 300 1000 400], 'NumberTitle', 'off');
+    
+    % 转换时间单位到小时
+    t_in_h = results.EV_t_in / 60;
+    t_dep_h = results.EV_t_dep / 60;
+    
+    % 子图1: 入网时间分布
+    subplot(1, 2, 1);
+    histogram(t_in_h, 24, 'Normalization', 'pdf', 'FaceColor', [0.2 0.6 0.8], 'EdgeColor', 'none');
+    hold on;
+    % 这里可以叠加理论曲线(如果需要)，此处展示实际分布
+    xlabel('入网时间 (小时)', 'FontSize', 12);
+    ylabel('概率密度', 'FontSize', 12);
+    % title('EV入网时间分布'); % 已移除标题
+    grid on;
+    set(gca, 'FontSize', 10);
+    
+    % 子图2: 离网时间分布
+    subplot(1, 2, 2);
+    histogram(t_dep_h, 24, 'Normalization', 'pdf', 'FaceColor', [0.8 0.4 0.2], 'EdgeColor', 'none');
+    xlabel('离网时间 (小时)', 'FontSize', 12);
+    ylabel('概率密度', 'FontSize', 12);
+    % title('EV离网时间分布'); % 已移除标题
+    grid on;
+    set(gca, 'FontSize', 10);
+    
+    % 保存图像
+    print(fig5, '用户行为分布.png', '-dpng', '-r600');
+end
+
+%% --------------------------------------------------
+% 算例 B (图 6): 聚合体调节能力边界 (可行域)
+% 保存为: 聚合调节边界.png
+% --------------------------------------------------
+fprintf('正在绘制图 6 (聚合调节边界)...\n');
+
+if ~isfield(results, 'P_base_agg') || ~isfield(results, 'EV_Up')
+    warning('结果文件中缺少聚合功率数据。跳过图 6 绘制。');
+else
+    fig6 = figure('Name', '聚合体调节能力边界', 'Position', [350 350 1000 400], 'NumberTitle', 'off');
+    
+    % 计算绝对边界
+    % P_upper = P_base + DeltaP_up
+    % P_lower = P_base + DeltaP_down
+    P_upper_bound = results.P_base_agg + results.EV_Up;
+    P_lower_bound = results.P_base_agg + results.EV_Down;
+    
+    % 绘制上边界
+    % plot(time_hours, P_upper_bound, '--', 'LineWidth', 1.5, 'Color', [0.8 0.2 0.2], 'DisplayName', '调节上界 (Upper Bound)');
+    hold on;
+    
+    % 绘制下边界
+    % plot(time_hours, P_lower_bound, '--', 'LineWidth', 1.5, 'Color', [0.2 0.2 0.8], 'DisplayName', '调节下界 (Lower Bound)');
+    
+    % 绘制基线功率
+    plot(time_hours, results.P_base_agg, 'k:', 'LineWidth', 1.5, 'DisplayName', '基线功率 (Baseline)');
+    
+    % 绘制实际聚合功率
+    plot(time_hours, results.P_agg, '-', 'LineWidth', 1.5, 'Color', [0.1 0.6 0.3], 'DisplayName', '实际功率 (Actual)');
+    
+    hold off;
+    
+    % 坐标轴设置
+    xlabel('时间 (小时)', 'FontSize', 14);
+    ylabel('功率 (kW)', 'FontSize', 14);
+    set(gca, 'FontSize', 12);
+    xlim([simulation_start_hour, simulation_start_hour + 24]); 
+    set(gca, 'XTick', x_ticks, 'XTickLabel', x_tick_labels);
+    grid on;
+    legend('Location', 'best', 'FontSize', 12);
+    
+    % 保存图像
+    print(fig6, '聚合调节边界.png', '-dpng', '-r600');
+end
+
+dt_short = 3;     % 短时间步长 (分钟)
+dt_long = 30;       % 长时间步长 (分钟)
+simulation_start_hour = 6;
+simulation_end_hour   = 30;
+dt = dt_short / 60;       % 短步长 (小时)
+dt_minutes = dt_short;    % 短步长 (分钟)
+dt_long_minutes = dt_long;% 长步长 (分钟)
+t_adj = dt_long / 60;     % 调节时长 (小时)
+
+time_points_absolute = simulation_start_hour : dt : (simulation_start_hour + 24 - dt);
+figure;
+plot(time_points_absolute, results.EV_Up, 'r-', 'LineWidth', 1.5, 'DisplayName', '聚合模型 上调潜力');
+hold on;
+plot(time_points_absolute, results.EV_Down, 'b-', 'LineWidth', 1.5, 'DisplayName', '聚合模型 下调潜力');
+plot(time_points_absolute, results.EV_Up_Individual_Sum, 'r--', 'LineWidth', 1.5, 'DisplayName', '单体求和 上调潜力');
+plot(time_points_absolute, results.EV_Down_Individual_Sum, 'b--', 'LineWidth', 1.5, 'DisplayName', '单体求和 下调潜力');
+
+xlabel('Time (hours)');
+ylabel('Potential (kW)');
+title('EV 调节潜力对比: 分组聚合模型 vs 单体求和');
+legend;
+grid on;
 
 fprintf('所有图像绘制完成。\n');

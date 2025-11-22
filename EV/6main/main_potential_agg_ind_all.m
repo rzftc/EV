@@ -1,6 +1,6 @@
 %% main_potential_agg_ind.m
 % (新增功能: 同时计算并对比“单体求和”潜力 - 包含分组聚合改进)
-% (本次修改: 增加单体基线电量与实际电量的记录)
+% (本次修改: 增加单体基线电量、实际电量、入离网时间分布、聚合基线功率的记录，用于论文算例验证)
 
 clc; clear; close all;
 rng(2024);
@@ -58,7 +58,10 @@ results = struct(...
     'EV_Down_Individual', zeros(num_evs, total_steps), ...
     ...
     'EV_E_actual',        zeros(num_evs, total_steps), ... % [新增] 实际电量轨迹
-    'EV_E_baseline',      zeros(num_evs, total_steps) ...  % [新增] 基线电量轨迹
+    'EV_E_baseline',      zeros(num_evs, total_steps), ... % [新增] 基线电量轨迹
+    'P_base_agg',         zeros(1, total_steps), ...       % [新增] 聚合基线功率
+    'EV_t_in',            zeros(num_evs, 1), ...           % [新增] 入网时间分布
+    'EV_t_dep',           zeros(num_evs, 1) ...            % [新增] 离网时间分布
     );
 
 %% 初始化EV参数 (向量化)
@@ -151,19 +154,27 @@ end
 clear EVs_for_baseline;
 fprintf('基线功率序列计算完成。\n');
 
-% [新增] 计算所有EV的基线能量轨迹
-fprintf('正在计算基线能量轨迹...\n');
+% [新增] 计算所有EV的基线能量轨迹 和 聚合基线功率
+fprintf('正在计算基线能量轨迹与聚合基线功率...\n');
+temp_P_base_agg = zeros(1, total_steps);
 for i = 1:num_evs
-    % 积分: E(t) = E_ini + cumsum(P_base * eta * dt)
-    % 注意: P_base_sequence 单位为 kW, dt 为小时 (dt_short/60)
-    delta_E = EVs(i).P_base_sequence * EVs(i).eta * (dt_short / 60);
-    % 注意：确保维度一致。P_base_sequence 是 (1 x total_steps) 或 (total_steps x 1)
-    if size(delta_E, 2) > 1
-        delta_E = delta_E'; % 转为列向量
+    % 1. 累加聚合基线功率
+    % 确保 P_base_sequence 是行向量 (1 x total_steps)
+    p_base_seq = EVs(i).P_base_sequence;
+    if size(p_base_seq, 1) > 1
+        p_base_seq = p_base_seq'; 
     end
+    temp_P_base_agg = temp_P_base_agg + p_base_seq;
+
+    % 2. 计算单体基线能量轨迹
+    % 积分: E(t) = E_ini + cumsum(P_base * eta * dt)
+    delta_E = p_base_seq * EVs(i).eta * (dt_short / 60);
     results.EV_E_baseline(i, :) = EVs(i).E_ini + cumsum(delta_E);
 end
-fprintf('基线能量轨迹计算完成。\n');
+results.P_base_agg = temp_P_base_agg; % 保存聚合基线功率
+results.EV_t_in = [EVs.t_in]';       % 保存入网时间
+results.EV_t_dep = [EVs.t_dep]';     % 保存离网时间
+fprintf('基线数据计算完成。\n');
 
 
 %% 外层循环（长时间步长）
@@ -340,15 +351,3 @@ catch ME_save
     fprintf('*** 保存结果文件时出错: %s ***\n', ME_save.message);
 end
 
-figure;
-plot(time_points_absolute, results.EV_Up, 'r-', 'LineWidth', 1.5, 'DisplayName', '聚合模型 上调潜力');
-hold on;
-plot(time_points_absolute, results.EV_Down, 'b-', 'LineWidth', 1.5, 'DisplayName', '聚合模型 下调潜力');
-plot(time_points_absolute, results.EV_Up_Individual_Sum, 'r--', 'LineWidth', 1.5, 'DisplayName', '单体求和 上调潜力');
-plot(time_points_absolute, results.EV_Down_Individual_Sum, 'b--', 'LineWidth', 1.5, 'DisplayName', '单体求和 下调潜力');
-
-xlabel('Time (hours)');
-ylabel('Potential (kW)');
-title('EV 调节潜力对比: 分组聚合模型 vs 单体求和');
-legend;
-grid on;
