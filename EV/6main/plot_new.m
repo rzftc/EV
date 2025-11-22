@@ -2,16 +2,8 @@
 % 重新绘制仿真结果 (6am-30am 坐标轴)
 %
 % 描述:
-%   此脚本加载由 main_potential_agg_ind.m 生成的 .mat 文件,
-%   并从零开始重新绘制三张关键结果图。
-%
-% 核心要求:
-%   1. 不调用 /5plot/ 目录下的函数。
-%   2. 不绘制任何“趋势”线 (no movmean)。
-%   3. X坐标轴必须明确显示为 D1 6:00 至 D2 6:00 (即 6 到 30 小时)。
-%
-% 依赖:
-%   'main_potential_agg_vs_individual_sum_results.mat'
+%   此脚本加载由 main_potential_agg_ind2.m 生成的 .mat 文件,
+%   并从零开始重新绘制四张关键结果图。
 %% --------------------------------------------------
 
 clc;
@@ -24,7 +16,7 @@ fprintf('正在加载结果文件: %s\n', resultsFile);
 
 if ~exist(resultsFile, 'file')
     error(['错误: 未找到结果文件 "%s"\n' ...
-        '请首先运行 "main_potential_agg_ind.m" 生成该文件。'], resultsFile);
+        '请首先运行 "main_potential_agg_ind2.m" 生成该文件。'], resultsFile);
 end
 data = load(resultsFile); % 加载 'results' 结构体
 results = data.results;
@@ -32,9 +24,9 @@ fprintf('结果加载完毕。\n');
 
 %% 2. 准备绘图参数
 % 仿真参数 (必须与 main_potential_agg_ind.m 匹配)
-dt_short = 3; % 默认短步长为 5 分钟
+dt_short = 3; % 默认短步长为 3 分钟
 simulation_start_hour = 6; % 仿真开始时间
-selected_ev = 825; % 选择绘制的EV编号
+selected_ev = 824; % 选择绘制的EV编号
 
 % 计算时间轴 (小时)
 total_steps = length(results.lambda);
@@ -47,7 +39,8 @@ x_tick_labels = {'D1 06:00', 'D1 12:00', 'D1 18:00', 'D2 00:00', 'D2 06:00'};
 fprintf('坐标轴已设置为 %d:00 (D1) 到 %d:00 (D2)。\n', simulation_start_hour, simulation_start_hour + 24);
 
 %% --------------------------------------------------
-% 图 1: 功率跟踪效果分析 (复现 image_b68bbd.png)
+% 图 1: 功率跟踪效果分析
+% 保存为: 功率跟踪效果分析.png
 % --------------------------------------------------
 fprintf('正在绘制图 1 (功率对比)...\n');
 fig1 = figure('Name', '功率跟踪效果分析', 'Position', [100 100 1000 400], 'NumberTitle', 'off');
@@ -78,9 +71,13 @@ ylim([0 ylim_max]);
 grid on;
 legend('Location', 'northeast', 'FontSize', 12);
 
+% 保存图像 (无标题，高DPI，中文名)
+print(fig1, '功率跟踪效果分析.png', '-dpng', '-r600');
+
 
 % %% --------------------------------------------------
-% % 图 2: Lambda 与 聚合SOC 协同分析 (复现 image_b68bba.png)
+% % 图 2: Lambda 与 聚合SOC 协同分析
+% % 保存为: 聚合SOC与Lambda.png
 % % --------------------------------------------------
 % fprintf('正在绘制图 2 (聚合SOC vs Lambda)...\n');
 % fig2 = figure('Name', 'Lambda与聚合SOC协同', 'Position', [150 150 1000 400], 'NumberTitle', 'off');
@@ -115,10 +112,14 @@ legend('Location', 'northeast', 'FontSize', 12);
 % set(gca, 'XTick', x_ticks, 'XTickLabel', x_tick_labels);
 % grid on;
 % legend([main_soc_agg, main_lambda_agg], 'Location', 'best', 'FontSize', 12);
+% 
+% % 保存图像 (无标题，高DPI，中文名)
+% print(fig2, '聚合SOC与Lambda.png', '-dpng', '-r600');
 
 
 %% --------------------------------------------------
-% 图 3: Lambda 与 单台EV SOC 协同分析 (复现 image_b68bc1.png)
+% 图 3: Lambda 与 单台EV SOC 协同分析
+% 保存为: 单体SOC与Lambda.png
 % --------------------------------------------------
 fprintf('正在绘制图 3 (单车SOC vs Lambda)...\n');
 
@@ -155,10 +156,14 @@ else
     set(gca, 'XTick', x_ticks, 'XTickLabel', x_tick_labels);
     grid on;
     legend([main_soc_ind, main_lambda_ind], 'Location', 'northwest', 'FontSize', 14);
+    
+    % 保存图像 (无标题，高DPI，中文名)
+    print(fig3, '单体SOC与Lambda.png', '-dpng', '-r600');
 end
 
 %% --------------------------------------------------
 % 图 4: 单台EV 电量对比 (基线 vs 实际)
+% 保存为: 单体电量对比.png
 % --------------------------------------------------
 fprintf('正在绘制图 4 (单车电量: 基线 vs 实际)...\n');
 
@@ -186,12 +191,15 @@ else
     % 坐标轴和标签设置
     xlabel('时间 (小时)', 'FontSize', 14);
     ylabel('电量 (kWh)', 'FontSize', 14);
-    title(sprintf('EV %d 充电电量随时间变化对比', selected_ev), 'FontSize', 14);
+    % title(sprintf('EV %d 充电电量随时间变化对比', selected_ev), 'FontSize', 14); % 已移除标题
     set(gca, 'FontSize', 12);
     xlim([simulation_start_hour, simulation_start_hour + 24]); % [6, 30]
     set(gca, 'XTick', x_ticks, 'XTickLabel', x_tick_labels);
     grid on;
     legend('Location', 'best', 'FontSize', 12);
+    
+    % 保存图像 (无标题，高DPI，中文名)
+    print(fig4, '单体电量对比.png', '-dpng', '-r600');
 end
 
 fprintf('所有图像绘制完成。\n');
