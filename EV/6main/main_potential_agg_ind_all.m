@@ -16,14 +16,14 @@ fprintf('成功加载%d辆EV数据\n', length(EVs));
     
 %% 时间参数定义
 dt_short = 5;     % 短时间步长 (分钟)
-dt_long = 30;       % 长时间步长 (分钟)
+dt_long = 60;       % 长时间步长 (分钟)
 simulation_start_hour = 6;
 simulation_end_hour   = 30;
 dt = dt_short / 60;       % 短步长 (小时)
 dt_minutes = dt_short;    % 短步长 (分钟)
 dt_long_minutes = dt_long;% 长步长 (分钟)
-t_adj = 60 / 60;     % 调节时长 (小时)
-
+t_adj = 5 / 60;     % 调节时长 (小时)
+% P_tar=zeros(1,24);
 % 时间轴 (小时)
 time_points_absolute = simulation_start_hour : dt : (simulation_start_hour + t_sim/60 - dt);
 num_time_points = length(time_points_absolute);
@@ -342,7 +342,7 @@ end % 结束 long_idx
 results.P_tar = repelem(P_tar, num_short_per_long);
 
 %% 结果保存与可视化
-outputFileName = 'main_potential_60min.mat'; 
+outputFileName = 'main_potential_5min.mat'; 
 fprintf('\n正在保存结果到 %s ...\n', outputFileName);
 try
     save(outputFileName, 'results', '-v7.3');
