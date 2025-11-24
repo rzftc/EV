@@ -303,7 +303,7 @@ if file_found_count > 0
     grid on;
     
     % 图例设置
-    legend('Location', 'eastoutside', 'FontSize', 12);
+    legend('Location', 'west', 'FontSize', 12);
 
     % 保存图像
     print(fig7, '不同调节时长上调节能力对比.png', '-dpng', '-r600');
@@ -365,7 +365,7 @@ if file_found_count > 0
     grid on;
     
     % 图例设置
-    legend('Location', 'eastoutside', 'FontSize', 12);
+    legend('Location', 'west', 'FontSize', 12);
 
     % 保存图像
     print(fig8, '不同调节时长下调节能力对比.png', '-dpng', '-r600');
