@@ -57,11 +57,11 @@ x_ticks = [6, 12, 18, 24, 30];
 x_tick_labels = {'D1 06:00', 'D1 12:00', 'D1 18:00', 'D2 00:00', 'D2 06:00'};
 
 % 1. 绘制目标功率（橙色半透明区域，仅绘制一次作为背景）
-% area(time_hours, base_results.P_tar, ...
-%     'FaceColor', [0.8 0.8 0.8], ... % 灰色背景
-%     'FaceAlpha', 0.3, ...
-%     'EdgeColor', 'none', ...
-%     'DisplayName', '目标功率 (P_{tar})');
+area(time_hours, base_results.P_tar, ...
+    'FaceColor', [0.8 0.8 0.8], ... % 灰色背景
+    'FaceAlpha', 0.3, ...
+    'EdgeColor', 'none', ...
+    'DisplayName', '目标功率 (P_{tar})');
 
 % 2. 循环加载并绘制每个激励下的 P_agg
 results = base_results; % 初始化 results 变量，用于后续图表
@@ -119,7 +119,7 @@ else
     main_soc_ind = plot(time_hours, results.EV_S_original(selected_ev, :), ...
         'LineWidth', 1.2, ...
         'Color', [0.8 0.2 0.2], ...
-        'DisplayName', 'SOC原始值');
+        'DisplayName', '期望SOC原始值');
     ylabel('SOC (-1~1)', 'FontSize', 16, 'Color', [0.8 0.2 0.2]);
     ylim([-2 ,2]);
     set(gca, 'YColor', [0.8 0.2 0.2]);
@@ -239,7 +239,7 @@ else
     hold on;
     
     % 绘制基线功率
-    plot(time_hours, results.P_base_agg, 'k:', 'LineWidth', 1.5, 'DisplayName', '基线功率 (Baseline)');
+    % plot(time_hours, results.P_base_agg, 'k:', 'LineWidth', 1.5, 'DisplayName', '基线功率 (Baseline)');
     
     % 绘制实际聚合功率
     plot(time_hours, results.P_agg, '-', 'LineWidth', 1.5, 'Color', [0.1 0.6 0.3], 'DisplayName', '实际功率 (Actual)');

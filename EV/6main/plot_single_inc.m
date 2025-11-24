@@ -20,7 +20,7 @@ clear;
 close all;
 
 %% 1. 加载数据
-resultsFile = 'main_potential_agg_vs_individual_sum_results2.mat';
+resultsFile = 'main_potential_agg_vs_individual_sum_results3.mat';
 fprintf('正在加载结果文件: %s\n', resultsFile);
 
 if ~exist(resultsFile, 'file')
@@ -78,7 +78,7 @@ set(gca, 'XTick', x_ticks, 'XTickLabel', x_tick_labels);
 ylim_max = max([results.P_agg, results.P_tar]) * 1.1;
 ylim([0 ylim_max]);
 grid on;
-legend('Location', 'northeast', 'FontSize', 12);
+legend('Location', 'northwest', 'FontSize', 12);
 
 % 保存图像 (无标题，高DPI，中文名)
 print(fig1, '功率跟踪效果分析.png', '-dpng', '-r600');

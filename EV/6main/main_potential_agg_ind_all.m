@@ -6,7 +6,7 @@ clc; clear; close all;
 rng(2024);
 
 %% 初始化参数
-excelFile = 'work_inc_2000.xlsx';
+excelFile = 'resi_inc_2000.xlsx';
 if ~exist(excelFile, 'file')
     generateEVParameters_real(excelFile, 1000, 1.0);
     fprintf('已生成参数模板: %s\n', excelFile);
@@ -22,7 +22,7 @@ simulation_end_hour   = 30;
 dt = dt_short / 60;       % 短步长 (小时)
 dt_minutes = dt_short;    % 短步长 (分钟)
 dt_long_minutes = dt_long;% 长步长 (分钟)
-t_adj = dt_long / 60;     % 调节时长 (小时)
+t_adj = 60 / 60;     % 调节时长 (小时)
 
 % 时间轴 (小时)
 time_points_absolute = simulation_start_hour : dt : (simulation_start_hour + t_sim/60 - dt);
@@ -342,7 +342,7 @@ end % 结束 long_idx
 results.P_tar = repelem(P_tar, num_short_per_long);
 
 %% 结果保存与可视化
-outputFileName = 'main_potential_agg_vs_individual_sum_results2.mat'; 
+outputFileName = 'main_potential_60min.mat'; 
 fprintf('\n正在保存结果到 %s ...\n', outputFileName);
 try
     save(outputFileName, 'results', '-v7.3');
