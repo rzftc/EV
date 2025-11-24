@@ -1,19 +1,3 @@
-%% --------------------------------------------------
-% 重新绘制仿真结果 (6am-30am 坐标轴)
-%
-% 描述:
-%   此脚本加载由 main_potential_agg_ind_all.m 生成的批量 .mat 文件,
-%   并在同一张图上绘制 10 个不同激励价格下的聚合功率曲线。
-%   后续的单体分析图表将基于最后一个加载的场景（最高激励价格）绘制。
-%
-% 核心要求:
-%   1. 绘制10个激励下的实际运行功率在一张图上。
-%   2. X坐标轴必须明确显示为 D1 6:00 至 D2 6:00 (即 6 到 30 小时)。
-%   3. 保存为高dpi png。
-%
-% 依赖:
-%   'results_incentive_XX.XX.mat' (10个文件)
-
 clc;
 clear;
 close all;
@@ -23,7 +7,7 @@ close all;
 incentive_prices = linspace(0, 50, 10); 
 
 % 仿真参数 (必须与 main 程序匹配)
-dt_short = 5; % 默认短步长为 3 分钟
+dt_short = 5; % 默认短步长为 5 分钟
 simulation_start_hour = 6; % 仿真开始时间
 selected_ev = 825; % 选择绘制的EV编号 (用于后续单体分析)
 
@@ -33,11 +17,20 @@ plot_colors = jet(length(incentive_prices));
 fprintf('准备处理 %d 个激励场景...\n', length(incentive_prices));
 
 %% --------------------------------------------------
-% 图 1: 多激励场景功率跟踪对比分析
-% 保存为: 多激励功率对比分析.png
+% 初始化图表句柄
 % --------------------------------------------------
-fprintf('正在绘制图 1 (多激励功率对比)...\n');
+
+% 图 1: 功率跟踪对比
+fprintf('正在初始化图表...\n');
 fig1 = figure('Name', '多激励功率对比分析', 'Position', [100 100 1200 500], 'NumberTitle', 'off');
+hold on;
+
+% [新增] 图 7: 上调能力对比
+fig_up = figure('Name', '多激励上调能力对比', 'Position', [150 150 1200 500], 'NumberTitle', 'off');
+hold on;
+
+% [新增] 图 8: 下调能力对比
+fig_down = figure('Name', '多激励下调能力对比', 'Position', [200 200 1200 500], 'NumberTitle', 'off');
 hold on;
 
 % 预先加载第一个文件以获取公共参数 (P_tar, 时间轴等)
@@ -56,14 +49,15 @@ time_hours = ((0:total_steps-1) * dt_short / 60) + simulation_start_hour;
 x_ticks = [6, 12, 18, 24, 30];
 x_tick_labels = {'D1 06:00', 'D1 12:00', 'D1 18:00', 'D2 00:00', 'D2 06:00'};
 
-% 1. 绘制目标功率（橙色半透明区域，仅绘制一次作为背景）
+% 在图 1 中绘制目标功率背景
+figure(fig1); 
 area(time_hours, base_results.P_tar, ...
     'FaceColor', [0.8 0.8 0.8], ... % 灰色背景
     'FaceAlpha', 0.3, ...
     'EdgeColor', 'none', ...
     'DisplayName', '目标功率 (P_{tar})');
 
-% 2. 循环加载并绘制每个激励下的 P_agg
+%% 2. 循环加载并绘制
 results = base_results; % 初始化 results 变量，用于后续图表
 for i = 1:length(incentive_prices)
     price = incentive_prices(i);
@@ -73,35 +67,77 @@ for i = 1:length(incentive_prices)
         data = load(fileName);
         results = data.results; % 更新 results，循环结束时保留最后一个用于后续绘图
         
-        % 绘制曲线
+        % --- 绘制图 1 (功率) ---
+        figure(fig1);
         plot(time_hours, results.P_agg, ...
             'LineWidth', 1.5, ...
             'Color', plot_colors(i, :), ...
             'DisplayName', sprintf('激励 %.1f分/kW', price));
+
+        % --- [新增] 绘制图 7 (上调能力) ---
+        figure(fig_up);
+        plot(time_hours, results.EV_Up, ...
+            'LineWidth', 1.5, ...
+            'Color', plot_colors(i, :), ...
+            'DisplayName', sprintf('激励 %.1f分/kW', price));
+
+        % --- [新增] 绘制图 8 (下调能力) ---
+        figure(fig_down);
+        plot(time_hours, results.EV_Down, ...
+            'LineWidth', 1.5, ...
+            'Color', plot_colors(i, :), ...
+            'DisplayName', sprintf('激励 %.1f分/kW', price));
+            
     else
         fprintf('警告: 文件 %s 不存在，跳过。\n', fileName);
     end
 end
 
-hold off;
+%% 3. 格式化并保存图表
 
-% 坐标轴和标签设置
+% --- 图 1 设置 ---
+figure(fig1);
+hold off;
 xlabel('时间 (小时)', 'FontSize', 14);
 ylabel('功率 (kW)', 'FontSize', 14);
 set(gca, 'FontSize', 12);
-xlim([simulation_start_hour, simulation_start_hour + 24]); % [6, 30]
+xlim([simulation_start_hour, simulation_start_hour + 24]); 
 set(gca, 'XTick', x_ticks, 'XTickLabel', x_tick_labels);
-ylim_max = max([base_results.P_agg, base_results.P_tar]) * 1.2; % 稍微调高上限
+ylim_max = max([base_results.P_agg, base_results.P_tar]) * 1.2; 
 ylim([0 ylim_max]);
 grid on;
-
-% 图例设置 (位置放外侧以免遮挡曲线)
-legend('Location', 'eastoutside', 'FontSize', 10);
-
-% 保存图像
+legend('Location', 'northwest', 'FontSize', 10);
 print(fig1, '多激励功率对比分析.png', '-dpng', '-r600');
-fprintf('图 1 绘制完成。后续图表将基于最后一个场景 (激励 %.2f) 绘制。\n', incentive_prices(end));
+fprintf('图 1 绘制完成。\n');
 
+% --- [新增] 图 7 设置 (上调能力) ---
+figure(fig_up);
+hold off;
+xlabel('时间 (小时)', 'FontSize', 14);
+ylabel('上调潜力 (kW)', 'FontSize', 14);
+set(gca, 'FontSize', 12);
+xlim([simulation_start_hour, simulation_start_hour + 24]); 
+set(gca, 'XTick', x_ticks, 'XTickLabel', x_tick_labels);
+grid on;
+legend('Location', 'northwest', 'FontSize', 10);
+print(fig_up, '多激励上调能力对比.png', '-dpng', '-r600');
+fprintf('图 7 (上调能力) 绘制完成。\n');
+
+% --- [新增] 图 8 设置 (下调能力) ---
+figure(fig_down);
+hold off;
+xlabel('时间 (小时)', 'FontSize', 14);
+ylabel('下调潜力 (kW)', 'FontSize', 14);
+set(gca, 'FontSize', 12);
+xlim([simulation_start_hour, simulation_start_hour + 24]); 
+set(gca, 'XTick', x_ticks, 'XTickLabel', x_tick_labels);
+grid on;
+legend('Location', 'northwest', 'FontSize', 10);
+print(fig_down, '多激励下调能力对比.png', '-dpng', '-r600');
+fprintf('图 8 (下调能力) 绘制完成。\n');
+
+
+fprintf('后续图表将基于最后一个场景 (激励 %.2f) 绘制。\n', incentive_prices(end));
 
 %% --------------------------------------------------
 % 图 3: Lambda 与 单台EV SOC 协同分析 (基于最后一个场景)
