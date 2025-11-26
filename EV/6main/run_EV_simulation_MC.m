@@ -1,4 +1,4 @@
-function [EV_Up_Sum, EV_Down_Sum, EV_Power_Sum] = run_EV_simulation_MC(random_seed)
+function [EV_Up_Sum, EV_Down_Sum, EV_Power_Sum] = run_EV_simulation_MC(random_seed, evFileName)
     % run_EV_simulation_MC
     % 修改说明：
     % 1. 输入参数改为 random_seed，用于控制蒙特卡洛模拟的随机性。
@@ -11,7 +11,7 @@ function [EV_Up_Sum, EV_Down_Sum, EV_Power_Sum] = run_EV_simulation_MC(random_se
         rng(random_seed); % 【修改点2】使用传入的随机种子
     end
 
-    excelFile = 'resi_inc_2000.xlsx';
+    excelFile = evFileName;
     if ~exist(excelFile, 'file')
         % 如果没有文件，生成一个临时的
         generateEVParameters_real(excelFile, 1000, 1.0);
