@@ -333,6 +333,6 @@ results.AC_Up_Individual = AC_Up_Individual;
 results.AC_Down_Individual = AC_Down_Individual;
 
 % 保存文件
-output_mat_name = 'DER2-6.mat';
+output_mat_name = 'DER2.mat';
 save(output_mat_name, 'results', '-v7.3');
 fprintf('  完整数据已保存至: %s\n', output_mat_name);
