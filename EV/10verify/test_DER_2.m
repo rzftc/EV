@@ -15,7 +15,7 @@ base_price = 30; % 基础电价（元/kWh）
 
 %% 2. 初始化 AC 参数
 acFile = 'AC_template2.xlsx'; % 确保 AC_template1.xlsx 在路径中
-fprintf('正在初始化DER2参数...\n');
+fprintf('正在初始化DER2-6参数...\n');
 try
     % 依赖 1initialize/initializeACsFromExcel.m
     ACs = initializeACsFromExcel(acFile);
@@ -241,9 +241,6 @@ for t_idx = 1:T_steps_total
     AC_Up_Individual(:, t_idx) = temp_AC_Up_Ind;
     AC_Down_Individual(:, t_idx) = temp_AC_Down_Ind;
     
-    % --- [修正 V12] 计算聚合模型理论潜力 (与单体逻辑对齐) ---
-    % 1. 能量约束: (S_target - A*S - C) / (B * dt)
-    %    注意：这里除以 dt 是因为 calculateACAdjustmentPotentia 中分母包含了 dt
     if abs(AggParams.B) > 1e-9
         P_agg_energy_up = (1 - AggParams.A * SOC_agg_t - AggParams.C) / (AggParams.B * dt);
         P_agg_energy_down = (0 - AggParams.A * SOC_agg_t - AggParams.C) / (AggParams.B * dt);
@@ -336,6 +333,6 @@ results.AC_Up_Individual = AC_Up_Individual;
 results.AC_Down_Individual = AC_Down_Individual;
 
 % 保存文件
-output_mat_name = 'DER2.mat';
+output_mat_name = 'DER2-6.mat';
 save(output_mat_name, 'results', '-v7.3');
 fprintf('  完整数据已保存至: %s\n', output_mat_name);
