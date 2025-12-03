@@ -10,15 +10,15 @@ set(0, 'DefaultAxesFontName', 'Microsoft YaHei');
 set(0, 'DefaultTextFontName', 'Microsoft YaHei');
 
 %% 1. 文件路径定义
-ev_file = 'main_potential_5min.mat';
-ac_file = 'AC_Stateful_Simulation_Results_5min.mat';
+ev_file = 'DER1.mat';
+ac_file = 'DER2.mat';
 
 fprintf('==================================================\n');
-fprintf('      源荷(EV+AC) 聚合调节潜力 联合验证程序      \n');
+fprintf('      源荷聚合调节潜力 联合验证程序      \n');
 fprintf('==================================================\n');
 
 %% 2. 加载 EV 数据
-fprintf('正在加载 EV 数据: %s ...\n', ev_file);
+fprintf('正在加载 DER1 数据: %s ...\n', ev_file);
 if ~exist(ev_file, 'file')
     error('未找到 EV 数据文件: %s', ev_file);
 end
@@ -43,7 +43,7 @@ else
 end
 
 %% 3. 加载 AC 数据
-fprintf('正在加载 AC 数据: %s ...\n', ac_file);
+fprintf('正在加载 DER2 数据: %s ...\n', ac_file);
 if ~exist(ac_file, 'file')
     error('未找到 AC 数据文件: %s', ac_file);
 end
@@ -209,7 +209,7 @@ fprintf('已保存: %s\n', save_name8);
 
 
 %% 7. 总量偏差计算
-fprintf('\n========== 联合系统 (EV + AC) 总量偏差验证 ==========\n');
+fprintf('\n========== 可控资源可调潜力预测验证 ==========\n');
 
 % 上调总量
 Sum_Model_Up = sum(Total_Up_Model);
@@ -233,14 +233,13 @@ else
 end
 
 fprintf('【联合上调潜力】\n');
-fprintf('  - 聚合模型总量: %.2f kW·step\n', Sum_Model_Up);
-fprintf('  - 单体累加总量: %.2f kW·step\n', Sum_True_Up);
-fprintf('  - 相对误差:     %.2f%%\n', Err_Up);
+fprintf('  - 聚合模型总量:                                %.2f kW·step\n', Sum_Model_Up);
+fprintf('  - 单体累加总量:                                %.2f kW·step\n', Sum_True_Up);
+fprintf('  - 可控资源与电网时空互济规划态潜力预测平均精确度: %.2f%%\n',      100-Err_Up);
 
 fprintf('【联合下调潜力】\n');
-fprintf('  - 聚合模型总量: %.2f kW·step\n', Sum_Model_Down);
-fprintf('  - 单体累加总量: %.2f kW·step\n', Sum_True_Down);
-fprintf('  - 相对误差:     %.2f%%\n', Err_Down);
+fprintf('  - 聚合模型总量:                                %.2f kW·step\n', Sum_Model_Down);
+fprintf('  - 单体累加总量:                                %.2f kW·step\n', Sum_True_Down);
+fprintf('  - 可控资源与电网时空互济规划态潜力预测平均精确度: %.2f%%\n',      100-Err_Down);
 
 fprintf('==================================================\n');
-close all;
