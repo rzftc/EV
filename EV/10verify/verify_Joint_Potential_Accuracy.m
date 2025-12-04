@@ -1,5 +1,5 @@
 clc; clear; close all;
-
+rng(2024);
 set(0, 'DefaultAxesFontName', 'Microsoft YaHei');
 set(0, 'DefaultTextFontName', 'Microsoft YaHei');
 
@@ -11,9 +11,9 @@ der_files = {
     'DER5.mat', 'IDC';
     'DER6.mat', 'Industry'
 };
-rng(4563);
+
 fprintf('==================================================\n');
-fprintf('      多资源协同（EV/AC/PV/P2G/IDC/Ind）潜力预测联合验证      \n');
+fprintf('      多资源协同潜力预测联合验证      \n');
 fprintf('==================================================\n');
 
 data_store = struct();

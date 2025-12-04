@@ -3,7 +3,7 @@ clear; close all; clc;
 
 tic; % 启动一个总计时器
 %% 1. 系统初始化
-rng(2023, 'Threefry'); % 固定随机种子
+rng(2024, 'Threefry'); % 固定随机种子
 T_total = 24; % 总时长（小时）
 dt = 5/60;    % 时间分辨率（小时）
 time_points = 0:dt:T_total; % 仿真时间点
