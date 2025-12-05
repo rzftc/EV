@@ -33,7 +33,7 @@ for sim_idx = 1:length(incentive_prices)
 
     %% 时间参数定义
     dt_short = 5;     % 短时间步长 (分钟)
-    dt_long = 30;       % 长时间步长 (分钟)
+    dt_long = 60;       % 长时间步长 (分钟)
     simulation_start_hour = 6;
     simulation_end_hour   = 30;
     dt = dt_short / 60;       % 短步长 (小时)
@@ -216,8 +216,17 @@ for sim_idx = 1:length(incentive_prices)
         %% 内层循环（短时间步长）
         for short_idx = 1:num_short_per_long
             step_idx = (long_idx - 1) * num_short_per_long + short_idx;
-            t_current_minute = t_long_start_minute + (short_idx - 1) * dt_minutes;
+            
+            % --- [修改点 1] 时间计算修正 ---
+            % 1. 计算相对仿真时间 (0 ~ 1440 分钟)，用于索引或相对控制
+            t_relative_minute = t_long_start_minute + (short_idx - 1) * dt_minutes;
+            
+            % 2. 计算绝对时间 (360 ~ 1800 分钟)，用于与 EV.t_in / EV.t_dep (绝对时间) 进行比较
+            %    加上仿真起始时间偏移量 (6 * 60 = 360分钟)
+            t_current_minute_abs = t_relative_minute + simulation_start_hour * 60;
+            
             current_absolute_hour = time_points_absolute(step_idx);
+            % ---------------------------
 
             temp_m3 = zeros(num_evs, 1);
             temp_S_original = zeros(num_evs, 1);
@@ -235,7 +244,9 @@ for sim_idx = 1:length(incentive_prices)
             parfor i = 1:num_evs
                 EV = EVs_in_parfor(i);
                 if EV.ptcp
-                    EV = updateLockState(EV, t_current_minute);
+                    % --- [修改点 2] 使用绝对时间更新状态 ---
+                    % 确保在 t=1800 (次日06:00) 时，车辆能正确识别为离网 (LockOFF)
+                    EV = updateLockState(EV, t_current_minute_abs); 
 
                     EV_for_handle = EV;
                     EV_temp_with_handle = generateDemandCurve(EV_for_handle);
@@ -254,7 +265,8 @@ for sim_idx = 1:length(incentive_prices)
                     end
                     EV.P_current = current_P_val;
 
-                    EV = calculateVirtualSOC_upgrade(EV, t_current_minute, dt_minutes);
+                    % --- [修改点 3] 使用绝对时间更新SOC ---
+                    EV = calculateVirtualSOC_upgrade(EV, t_current_minute_abs, dt_minutes);
 
                     if EV.t_dep > EV.t_in
                         m3_val = (EV.E_tar - EV.E_ini) / (EV.eta * ((EV.t_dep - EV.t_in) / 60));

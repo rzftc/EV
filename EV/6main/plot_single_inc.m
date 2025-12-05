@@ -4,7 +4,7 @@ clear;
 close all;
 
 %% 1. 加载数据
-resultsFile = 'main_potential_agg_vs_individual_sum_results3.mat';
+resultsFile = 'main_potential_5min.mat';
 fprintf('正在加载结果文件: %s\n', resultsFile);
 
 if ~exist(resultsFile, 'file')

@@ -188,7 +188,10 @@ for long_idx = 1:num_long_steps
     %% 内层循环（短时间步长）
     for short_idx = 1:num_short_per_long
         step_idx = (long_idx - 1) * num_short_per_long + short_idx;
-        t_current_minute = t_long_start_minute + (short_idx - 1) * dt_minutes;
+        t_relative_minute = t_long_start_minute + (short_idx - 1) * dt_minutes; 
+    
+        t_current_minute_abs = t_relative_minute + simulation_start_hour * 60; 
+    
         current_absolute_hour = time_points_absolute(step_idx);
 
         temp_m3 = zeros(num_evs, 1);
@@ -206,7 +209,7 @@ for long_idx = 1:num_long_steps
 
         parfor i = 1:num_evs
             EV = EVs_in_parfor(i);
-            EV = updateLockState(EV, t_current_minute);
+            EV = updateLockState(EV, t_current_minute_abs);
 
             EV_for_handle = EV;
             EV_temp_with_handle = generateDemandCurve(EV_for_handle);
@@ -225,7 +228,7 @@ for long_idx = 1:num_long_steps
             end
             EV.P_current = current_P_val;
 
-            EV = calculateVirtualSOC_upgrade(EV, t_current_minute, dt_minutes);
+            EV = calculateVirtualSOC_upgrade(EV, t_current_minute_abs, dt_minutes);
 
             if EV.t_dep > EV.t_in
                  m3_val = (EV.E_tar - EV.E_ini) / (EV.eta * ((EV.t_dep - EV.t_in) / 60));
@@ -350,19 +353,19 @@ try
 catch ME_save
     fprintf('*** 保存结果文件时出错: %s ***\n', ME_save.message);
 end
-
-% (修改) 仅保留潜力对比可视化
-figure;
-plot(time_points_absolute, results.EV_Up, 'r-', 'LineWidth', 1.5, 'DisplayName', '聚合模型 上调潜力 (results.EV_Up)');
-hold on;
-plot(time_points_absolute, results.EV_Down, 'b-', 'LineWidth', 1.5, 'DisplayName', '聚合模型 下调潜力 (results.EV_Down)');
-plot(time_points_absolute, results.EV_Up_Individual_Sum, 'r--', 'LineWidth', 1.5, 'DisplayName', '单体求和 上调潜力 (results.EV_Up_Individual_Sum)');
-plot(time_points_absolute, results.EV_Down_Individual_Sum, 'b--', 'LineWidth', 1.5, 'DisplayName', '单体求和 下调潜力 (results.EV_Down_Individual_Sum)');
-% (新增) 绘制新添加的 M x T 个体潜力矩阵的 *总和*，用于验证
-
-xlabel('Time (hours)');
-ylabel('Potential (kW)');
-title('EV 调节潜力对比: 聚合模型 vs 单体求和');
-legend;
-grid on;
-
+% 
+% % (修改) 仅保留潜力对比可视化
+% figure;
+% plot(time_points_absolute, results.EV_Up, 'r-', 'LineWidth', 1.5, 'DisplayName', '聚合模型 上调潜力 (results.EV_Up)');
+% hold on;
+% plot(time_points_absolute, results.EV_Down, 'b-', 'LineWidth', 1.5, 'DisplayName', '聚合模型 下调潜力 (results.EV_Down)');
+% plot(time_points_absolute, results.EV_Up_Individual_Sum, 'r--', 'LineWidth', 1.5, 'DisplayName', '单体求和 上调潜力 (results.EV_Up_Individual_Sum)');
+% plot(time_points_absolute, results.EV_Down_Individual_Sum, 'b--', 'LineWidth', 1.5, 'DisplayName', '单体求和 下调潜力 (results.EV_Down_Individual_Sum)');
+% % (新增) 绘制新添加的 M x T 个体潜力矩阵的 *总和*，用于验证
+% 
+% xlabel('Time (hours)');
+% ylabel('Potential (kW)');
+% title('EV 调节潜力对比: 聚合模型 vs 单体求和');
+% legend;
+% grid on;
+% 

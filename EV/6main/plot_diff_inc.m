@@ -107,7 +107,8 @@ ylim_max = max([base_results.P_agg, base_results.P_tar]) * 1.2;
 ylim([0 ylim_max]);
 grid on;
 legend('Location', 'northwest', 'FontSize', 10);
-print(fig1, '多激励功率对比分析.png', '-dpng', '-r600');
+set(fig1, 'Renderer', 'painters'); % 强制矢量渲染
+print(fig1, '多激励功率对比分析.emf', '-dmeta', '-r600');
 fprintf('图 1 绘制完成。\n');
 
 % --- [新增] 图 7 设置 (上调能力) ---
@@ -120,7 +121,8 @@ xlim([simulation_start_hour, simulation_start_hour + 24]);
 set(gca, 'XTick', x_ticks, 'XTickLabel', x_tick_labels);
 grid on;
 legend('Location', 'northwest', 'FontSize', 10);
-print(fig_up, '多激励上调能力对比.png', '-dpng', '-r600');
+set(fig_up, 'Renderer', 'painters');
+print(fig_up, '多激励上调能力对比.emf', '-dmeta', '-r600');
 fprintf('图 7 (上调能力) 绘制完成。\n');
 
 % --- [新增] 图 8 设置 (下调能力) ---
@@ -133,7 +135,8 @@ xlim([simulation_start_hour, simulation_start_hour + 24]);
 set(gca, 'XTick', x_ticks, 'XTickLabel', x_tick_labels);
 grid on;
 legend('Location', 'northwest', 'FontSize', 10);
-print(fig_down, '多激励下调能力对比.png', '-dpng', '-r600');
+set(fig_down, 'Renderer', 'painters');
+print(fig_down, '多激励下调能力对比.emf', '-dmeta', '-r600');
 fprintf('图 8 (下调能力) 绘制完成。\n');
 
 
@@ -179,7 +182,8 @@ else
     legend([main_soc_ind, main_lambda_ind], 'Location', 'northwest', 'FontSize', 14);
     
     % 保存图像
-    print(fig3, '单体SOC与Lambda.png', '-dpng', '-r600');
+    set(fig3, 'Renderer', 'painters');
+    print(fig3, '单体SOC与Lambda.emf', '-dmeta', '-r600');
 end
 
 %% --------------------------------------------------
@@ -219,7 +223,8 @@ else
     legend('Location', 'best', 'FontSize', 12);
     
     % 保存图像
-    print(fig4, '单体电量对比.png', '-dpng', '-r600');
+    set(fig4, 'Renderer', 'painters');
+    print(fig4, '单体电量对比.emf', '-dmeta', '-r600');
 end
 
 %% --------------------------------------------------
@@ -254,7 +259,8 @@ else
     set(gca, 'FontSize', 10);
     
     % 保存图像
-    print(fig5, '用户行为分布.png', '-dpng', '-r600');
+    set(fig5, 'Renderer', 'painters');
+    print(fig5, '用户行为分布.emf', '-dmeta', '-r600');
 end
 
 %% --------------------------------------------------
@@ -292,7 +298,8 @@ else
     legend('Location', 'best', 'FontSize', 12);
     
     % 保存图像
-    print(fig6, '聚合调节边界.png', '-dpng', '-r600');
+    set(fig6, 'Renderer', 'painters');
+    print(fig6, '聚合调节边界.emf', '-dmeta', '-r600');
 end
 
 fprintf('所有图像绘制完成。\n');

@@ -73,11 +73,10 @@ function [EVs, t_sim, dt_short, dt_long, P_tar] = initializeFromExcel(filePath)
     P_max_potential = zeros(1, num_long_steps); % 存储每个长步的最大潜在功率
     t_in_vec = [EVs.t_in]';   % 向量化 t_in
     t_dep_vec = [EVs.t_dep]'; % 向量化 t_dep
-
+    simulation_start_minutes = 6 * 60; % 360分钟
     for j = 1:num_long_steps
-        current_t_start = (j-1) * dt_long; % 当前长步开始时间
-        current_t_end = j * dt_long;       % 当前长步结束时间 (用于更精确判断连接状态)
-
+        current_t_start = (j-1) * dt_long + simulation_start_minutes; 
+        current_t_end = j * dt_long + simulation_start_minutes;
         % 找到在此长步时间段内 '在线' 的 EV
         % 条件：入网时间 <= 长步结束时间 AND 离网时间 > 长步开始时间
         connected_mask = (t_in_vec < current_t_end) & (t_dep_vec > current_t_start);

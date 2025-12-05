@@ -124,7 +124,8 @@ function [EV_Up_Sum, EV_Down_Sum, EV_Power_Sum] = run_EV_simulation_MC(random_se
         % 短时间步：状态更新
         for short_idx = 1:num_short_per_long
             step_idx = (long_idx - 1) * num_short_per_long + short_idx;
-            t_current_minute = t_long_start_minute + (short_idx - 1) * dt_minutes;
+            t_relative_minute = t_long_start_minute + (short_idx - 1) * dt_minutes; 
+            t_current_minute_abs = t_relative_minute + simulation_start_hour * 60; 
             current_absolute_hour = time_points_absolute(step_idx);
 
             temp_delta_p_plus_individual = zeros(num_evs, 1);
@@ -135,7 +136,7 @@ function [EV_Up_Sum, EV_Down_Sum, EV_Power_Sum] = run_EV_simulation_MC(random_se
 
             parfor i = 1:num_evs
                 EV = EVs_in_parfor(i);
-                EV = updateLockState(EV, t_current_minute);
+                EV = updateLockState(EV, t_current_minute_abs);
 
                 EV_temp_with_handle = generateDemandCurve(EV);
                 current_P_val = 0;
@@ -153,7 +154,7 @@ function [EV_Up_Sum, EV_Down_Sum, EV_Power_Sum] = run_EV_simulation_MC(random_se
                 end
                 EV.P_current = current_P_val;
 
-                EV = calculateVirtualSOC_upgrade(EV, t_current_minute, dt_minutes);
+                EV = calculateVirtualSOC_upgrade(EV, t_current_minute_abs, dt_minutes);
 
                 temp_P_current(i) = EV.P_current;
                 
