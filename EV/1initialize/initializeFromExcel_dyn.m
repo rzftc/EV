@@ -1,4 +1,4 @@
-function [EVs, t_sim, dt_short, dt_long, P_tar] = initializeFromExcel(filePath)
+function [EVs, t_sim, dt_short, dt_long, P_tar] = initializeFromExcel_dyn(filePath)
     % --- 参数校验 ---
     if ~exist(filePath, 'file')
         error('EV参数文件不存在: %s', filePath);
@@ -89,8 +89,27 @@ function [EVs, t_sim, dt_short, dt_long, P_tar] = initializeFromExcel(filePath)
         end
     end
 
-    % 设置 P_tar 为最大潜在功率的一个比例 (例如 60%)
-    load_factor = 0.52; % 可调参数：目标负荷率
+    % -------------------- (修改开始) --------------------
+    % 修正 P_tar 生成逻辑：
+    % 原逻辑固定 0.6 可能导致目标能量(面积)小于需求能量，导致EV被迫进入LockON状态。
+    % 新逻辑：计算总能量需求，确保 P_tar 曲线下的面积足以覆盖需求，并预留裕度。
+    
+    total_energy_needed = sum(max(0, data.E_tar_set - data.E_ini)); % 总需求电量 (kWh)
+    total_energy_capacity = sum(P_max_potential) * (dt_long / 60); % P_max 曲线下的总能量 (kWh)
+    
+    if total_energy_capacity > 0
+        % 计算刚好满足需求所需的比例，并乘以 1.25 倍安全裕度 (防止分布不均导致局部死区)
+        calculated_factor = (total_energy_needed / total_energy_capacity) * 1.25;
+        % 限制 load_factor 在 [0.6, 0.95] 之间，防止过小或过大(超过物理极限)
+        load_factor = min(0.95, max(0.6, calculated_factor));
+    else
+        load_factor = 0.6;
+    end
+    
+    fprintf('初始化 P_tar: 总需求 %.1f kWh, 总容量 %.1f kWh -> Load Factor 自动调整为 %.2f\n', ...
+        total_energy_needed, total_energy_capacity, load_factor);
+
     P_tar = P_max_potential * load_factor;
+    % -------------------- (修改结束) --------------------
 
 end

@@ -4,7 +4,7 @@ clear;
 close all;
 
 %% 1. 加载数据
-resultsFile = 'main_potential_5min_work.mat';
+resultsFile = 'main_potential_5min_1000.mat';
 fprintf('正在加载结果文件: %s\n', resultsFile);
 
 if ~exist(resultsFile, 'file')
@@ -20,7 +20,7 @@ end
 % 仿真参数 (必须与 main_potential_agg_ind.m 匹配)
 dt_short = 5; % 默认短步长为 5 分钟
 simulation_start_hour = 6; % 仿真开始时间
-selected_ev = 825; % 选择绘制的EV编号
+selected_ev = 46; % 选择绘制的EV编号
 
 % 计算时间轴 (小时) - 这里的 total_steps 基于 results 计算
 if exist('results', 'var')
@@ -55,7 +55,7 @@ if exist('results', 'var')
     hold on;
 
     % 绘制实际功率（深绿色实线）
-    plot(time_hours, results.P_agg, ...
+    plot(time_hours, results.P_agg_ptcp, ...
         'LineWidth', 1.5, ...
         'Color', [0 0.5 0], ...
         'DisplayName', '实际功率');
@@ -297,8 +297,8 @@ line_colors = {'r', 'g', 'b'};
 fig7 = figure('Name', '不同调节时长上调节能力对比', 'Position', [400 400 1000 400], 'NumberTitle', 'off');
 hold on;
 
-% 绘制零线
-yline(0, 'k-', 'LineWidth', 1);
+% 绘制零线 - 【关键修改】添加 'HandleVisibility', 'off' 以避免 "data1" 图例
+yline(0, 'k-', 'LineWidth', 1, 'HandleVisibility', 'off');
 
 file_found_count = 0;
 for i = 1:length(file_list)
@@ -363,8 +363,8 @@ fprintf('正在绘制图 8 (不同调节时长下调节能力对比)...\n');
 fig8 = figure('Name', '不同调节时长下调节能力对比', 'Position', [400 100 1000 400], 'NumberTitle', 'off');
 hold on;
 
-% 绘制零线
-yline(0, 'k-', 'LineWidth', 1);
+% 绘制零线 - 【关键修改】添加 'HandleVisibility', 'off' 以避免 "data1" 图例
+yline(0, 'k-', 'LineWidth', 1, 'HandleVisibility', 'off');
 
 file_found_count = 0;
 for i = 1:length(file_list)

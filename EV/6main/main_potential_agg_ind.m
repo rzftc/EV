@@ -1,12 +1,13 @@
 %% main_potential_agg_ind.m
 % (新增功能: 同时计算并对比“单体求和”潜力 - 包含分组聚合改进)
 % (本次修改: 增加聚合模型计算的实时功率 results.EV_Power，用于验证)
+% (本次修改: 增加 results.P_agg_ptcp，保存参与聚合EV的运行功率)
 
 clc; clear; close all;
 rng(2024);
 
 %% 初始化参数
-excelFile = 'resi_inc_2000.xlsx';
+excelFile = 'evtest.xlsx';
 if ~exist(excelFile, 'file')
     generateEVParameters_real(excelFile, 1000, 1.0);
     fprintf('已生成参数模板: %s\n', excelFile);
@@ -40,6 +41,7 @@ assert(mod(num_long_steps, 24*(60/dt_long)) == 0, '长时间步数必须是24小
 num_evs = length(EVs);
 results = struct(...
     'P_agg',         zeros(1, total_steps), ...
+    'P_agg_ptcp',    zeros(1, total_steps), ... % [新增] 参与聚合的EV运行功率
     'P_base',        zeros(1, total_steps), ...
     'S_agg',         zeros(1, total_steps), ...
     'lambda',        zeros(1, total_steps), ...
@@ -327,6 +329,7 @@ for long_idx = 1:num_long_steps
         results.lambda(step_idx) = lambda_star;
         results.S_agg(step_idx) = S_agg_current;
         results.P_agg(step_idx) = sum(temp_P_current);
+        results.P_agg_ptcp(step_idx) = sum(temp_P_current(ptcp_vec)); % [新增] 计算参与聚合的EV总功率
         results.P_cu(step_idx) = temp_P_current(10);
 
         results.EV_Up(step_idx)   = agg_DeltaP_plus;
@@ -352,7 +355,7 @@ end % 结束 long_idx
 results.P_tar = repelem(P_tar, num_short_per_long);
 
 %% 结果保存与可视化
-outputFileName = 'main_potential_5min.mat'; 
+outputFileName = 'main_potential_5min_1000.mat'; 
 fprintf('\n正在保存结果到 %s ...\n', outputFileName);
 try
     save(outputFileName, 'results', '-v7.3');
