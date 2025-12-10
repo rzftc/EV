@@ -22,7 +22,7 @@ for sim_idx = 1:length(incentive_prices)
     fprintf('==========================================================\n');
 
     %% 初始化参数
-    excelFile = 'resi_inc_2000.xlsx';
+    excelFile = 'evtest.xlsx';
     if ~exist(excelFile, 'file')
         generateEVParameters_real(excelFile, 1000, 1.0);
         fprintf('已生成参数模板: %s\n', excelFile);
@@ -384,7 +384,7 @@ for sim_idx = 1:length(incentive_prices)
 
     %% 结果保存
     % 【修改点】根据当前价格生成唯一文件名
-    outputFileName = sprintf('results_incentive_%.2f.mat', current_incentive_price);
+    outputFileName = sprintf('results_incentive_%.2f_1000.mat', current_incentive_price);
     fprintf('\n正在保存结果到 %s ...\n', outputFileName);
     try
         save(outputFileName, 'results', '-v7.3');

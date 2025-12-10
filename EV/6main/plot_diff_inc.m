@@ -34,7 +34,7 @@ fig_down = figure('Name', '多激励下调能力对比', 'Position', [200 200 12
 hold on;
 
 % 预先加载第一个文件以获取公共参数 (P_tar, 时间轴等)
-firstFile = sprintf('results_incentive_%.2f.mat', incentive_prices(1));
+firstFile = sprintf('results_incentive_%.2f_1000.mat', incentive_prices(1));
 if ~exist(firstFile, 'file')
     error('未找到第一个结果文件: %s。请确保已运行 main_potential_agg_ind_all.m', firstFile);
 end
@@ -61,7 +61,7 @@ area(time_hours, base_results.P_tar, ...
 results = base_results; % 初始化 results 变量，用于后续图表
 for i = 1:length(incentive_prices)
     price = incentive_prices(i);
-    fileName = sprintf('results_incentive_%.2f.mat', price);
+    fileName = sprintf('results_incentive_%.2f_1000.mat', price);
     
     if exist(fileName, 'file')
         data = load(fileName);
