@@ -13,7 +13,7 @@ base_price = 30;
 
 %% 2. 初始化 AC 参数
 acFile = 'AC_template2.xlsx';
-fprintf('正在初始化DER2-6参数...\n');
+fprintf('正在初始化DER2参数...\n');
 try
     ACs = initializeACsFromExcel(acFile);
 catch ME
