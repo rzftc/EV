@@ -1,6 +1,6 @@
 %% test_DER_5.m (数据中心 IDC 调节潜力仿真)
 
-clc; clear; close all;
+clear; close all;
 rng(2024);
 
 %% 1. 参数

@@ -1,4 +1,4 @@
-clear; close all; clc;
+clear; close all; 
 
 tic;
 %% 1. 系统初始化

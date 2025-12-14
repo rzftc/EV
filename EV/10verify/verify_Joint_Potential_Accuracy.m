@@ -1,4 +1,4 @@
-clc; clear; close all;
+clear; close all;
 rng(2024);
 set(0, 'DefaultAxesFontName', 'Microsoft YaHei');
 set(0, 'DefaultTextFontName', 'Microsoft YaHei');

@@ -1,6 +1,6 @@
 %% test_DER_3.m (分布式光伏 PV 调节潜力仿真)
 
-clc; clear; close all;
+clear; close all;
 rng(2024);
 
 %% 1. 初始化

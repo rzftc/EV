@@ -1,6 +1,6 @@
 %% test_DER_4.m (电制氢 P2G 调节潜力仿真)
 
-clc; clear; close all;
+clear; close all;
 rng(2024);
 
 %% 1. 参数

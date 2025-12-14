@@ -1,6 +1,6 @@
 %% test_DER_6.m (工业大负荷调节潜力仿真)
 
-clc; clear; close all;
+clear; close all;
 rng(2024);
 
 %% 1. 参数
