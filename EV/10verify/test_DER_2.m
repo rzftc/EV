@@ -57,11 +57,15 @@ scaled_fluctuations = (fluctuations_centered / std(fluctuations_centered, 'omitn
 base_ambient_temp_unified = base_trend + scaled_fluctuations;
 base_ambient_temp_unified = max(base_ambient_temp_unified, T_ja_min_ambient);
 
+rand_vals = rand(num_AC, 1); 
+participation = calculateParticipation(current_p, base_price); % 提到循环外计算一次即可
+
 parfor i = 1:num_AC
-    participation = calculateParticipation(current_p, base_price);
     [~, ~, deltaT_flex_magnitude] = incentiveTempAC(...
         current_p, p_min, p_max, p_min_prime, p_max_prime, T_set_max);
-    temp_ACs(i).ptcp = (rand() < participation);
+        
+    % 【修改点】使用预生成的随机数
+    temp_ACs(i).ptcp = (rand_vals(i) < participation);
 
     if temp_ACs(i).ptcp
         temp_ACs(i).Tmax = temp_ACs(i).Tset_original + deltaT_flex_magnitude;

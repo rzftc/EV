@@ -135,8 +135,8 @@ if exist('results', 'var')
         main_soc_ind = plot(time_hours, results.EV_S_original(selected_ev, :), ...
             'LineWidth', 1.2, ...
             'Color', [0.8 0.2 0.2], ...
-            'DisplayName', 'SOC原始值');
-        ylabel('SOC (-1~1)', 'FontSize', 16, 'Color', [0.8 0.2 0.2]);
+            'DisplayName', '期望SOC值');
+        ylabel('期望SOC (-1~1)', 'FontSize', 16, 'Color', [0.8 0.2 0.2]);
         ylim([-2 ,2]);
         set(gca, 'YColor', [0.8 0.2 0.2]);
 

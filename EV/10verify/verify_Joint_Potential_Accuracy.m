@@ -1,5 +1,5 @@
 clear; close all;
-rng(2024);
+rng(2025, 'twister');
 set(0, 'DefaultAxesFontName', 'Microsoft YaHei');
 set(0, 'DefaultTextFontName', 'Microsoft YaHei');
 

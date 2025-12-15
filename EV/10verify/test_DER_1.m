@@ -1,5 +1,5 @@
 clc; clear; close all;
-rng(2024);
+rng(2024, 'twister');
 
 %% 初始化参数
 excelFile = 'resi_inc_2000.xlsx';
