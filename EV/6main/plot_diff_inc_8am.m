@@ -58,6 +58,10 @@ area(time_hours, base_results.P_tar, ...
 
 %% 2. 循环加载并绘制
 results = base_results; % 初始化 results 变量，用于后续图表
+
+% [新增] 数据收集容器：用于绘制“价格-最大功率”曲线
+max_agg_powers = zeros(1, length(incentive_prices));
+
 for i = 1:length(incentive_prices)
     price = incentive_prices(i);
     fileName = sprintf('results_incentive_%.2f_1000_8am.mat', price);
@@ -65,6 +69,11 @@ for i = 1:length(incentive_prices)
     if exist(fileName, 'file')
         data = load(fileName);
         results = data.results; % 更新 results，循环结束时保留最后一个用于后续绘图
+        
+        % 收集该场景下的最大聚合功率
+        if isfield(results, 'P_agg')
+            max_agg_powers(i) = max(results.P_agg);
+        end
         
         % --- 绘制图 1 (功率) ---
         figure(fig1);
@@ -137,6 +146,18 @@ legend('Location', 'northwest', 'FontSize', 10);
 set(fig_down, 'Renderer', 'painters');
 print(fig_down, '多激励下调能力对比.emf', '-dmeta', '-r600');
 fprintf('图 8 (下调能力) 绘制完成。\n');
+
+% --- [新增] 图 9: 激励价格 vs 聚合整体功率特性曲线 ---
+% 功能：验证 EV 的激励响应死区与饱和区
+fig_curve = figure('Name', 'EV激励价格-聚合整体功率特性', 'Position', [250 250 800 500], 'NumberTitle', 'off');
+plot(incentive_prices, max_agg_powers, 'bo-', 'LineWidth', 2, 'MarkerSize', 8, 'MarkerFaceColor', 'b');
+xlabel('激励电价 (分/kW)', 'FontSize', 14);
+ylabel('聚合整体功率峰值 (kW)', 'FontSize', 14);
+set(gca, 'FontSize', 12);
+grid on;
+set(fig_curve, 'Renderer', 'painters');
+print(fig_curve, 'EV激励价格-聚合整体功率特性.emf', '-dmeta', '-r600');
+fprintf('图 9 (特性曲线) 绘制完成。\n');
 
 
 fprintf('后续图表将基于最后一个场景 (激励 %.2f) 绘制。\n', incentive_prices(end));
