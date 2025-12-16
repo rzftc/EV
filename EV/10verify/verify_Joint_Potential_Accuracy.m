@@ -1,5 +1,5 @@
 clear; close all;
-rng(2025, 'twister');
+rng(104, 'twister');
 set(0, 'DefaultAxesFontName', 'Microsoft YaHei');
 set(0, 'DefaultTextFontName', 'Microsoft YaHei');
 
@@ -203,21 +203,22 @@ if abs(Sum_True_Up) > 1e-3
 else
     Err_Up = 0;
 end
-
+Err_Up_Accu = 100-Err_Up;
 if abs(Sum_True_Down) > 1e-3
     Err_Down = abs(Sum_Model_Down - Sum_True_Down) / abs(Sum_True_Down) * 100;
 else
     Err_Down = 0;
 end
+Err_Down_Accu = 100-Err_Down;
 
 fprintf('【联合上调潜力】\n');
 fprintf('  - 预测潜力量:                                   %.2f kW·step\n', Sum_Model_Up);
 fprintf('  - 真值潜力量 :                                  %.2f kW·step\n', Sum_True_Up);
-fprintf('  - 可控资源与电网时空互济规划态潜力预测平均精确度： %.2f%%\n', 100-Err_Up);
+fprintf('  - 可控资源与电网时空互济规划态潜力预测平均精确度： %.2f%%\n', Err_Up_Accu);
 
 fprintf('【联合下调潜力】\n');
 fprintf('  - 预测潜力量:                                  %.2f kW·step\n', Sum_Model_Down);
 fprintf('  - 真值潜力量:                                  %.2f kW·step\n', Sum_True_Down);
-fprintf('  - 可控资源与电网时空互济规划态潜力预测平均精确度：%.2f%%\n', 100-Err_Down);
+fprintf('  - 可控资源与电网时空互济规划态潜力预测平均精确度：%.2f%%\n', Err_Down_Accu);
 
 fprintf('======================================================\n');
