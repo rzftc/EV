@@ -3,6 +3,7 @@
 % 1. 生成用户失约场景 (提前离网)
 % 2. 区分“聚合商视角(合约)”与“物理视角(实际)”的潜力计算
 % 3. 可视化违约风险造成的容量缺口
+% 4. [新增] 可视化违约风险造成的聚合功率偏差，并保存高DPI图片
 
 clc; clear; close all;
 rng(2024);
@@ -43,6 +44,7 @@ num_evs = length(EVs);
 results = struct(...
     'P_agg',         zeros(1, total_steps), ...
     'P_agg_ptcp',    zeros(1, total_steps), ... % [新增] 参与聚合的EV运行功率
+    'P_agg_actual',  zeros(1, total_steps), ... % [新增] 考虑失约后的实际聚合功率
     'P_base',        zeros(1, total_steps), ...
     'S_agg',         zeros(1, total_steps), ...
     'lambda',        zeros(1, total_steps), ...
@@ -53,7 +55,7 @@ results = struct(...
     'P_cu',          zeros(1, total_steps), ...
     'EV_Up',         zeros(1, total_steps), ... % 聚合模型上调潜力 (聚合商视角)
     'EV_Down',       zeros(1, total_steps), ... % 聚合模型下调潜力 (聚合商视角)
-    'EV_Power',      zeros(1, total_steps), ... % [新增] 聚合模型实时功率
+    'EV_Power',      zeros(1, total_steps), ... % 聚合模型实时功率
     'EV_Up_Individual_Sum',   zeros(1, total_steps), ... % 单体求和上调潜力 (物理视角)
     'EV_Down_Individual_Sum', zeros(1, total_steps),  ... % 单体求和下调潜力 (物理视角)
     ...
@@ -234,6 +236,7 @@ for long_idx = 1:num_long_steps
         temp_S_original = zeros(num_evs, 1);
         temp_S_mod = zeros(num_evs, 1);
         temp_P_current = zeros(num_evs, 1);
+        temp_P_actual = zeros(num_evs, 1); % [新增] 临时存储当前实际物理功率(考虑失约)
         temp_E_current = zeros(num_evs, 1); % [新增] 临时存储当前实际电量
         
         % (新增) 为单体求和潜力创建临时存储
@@ -275,13 +278,20 @@ for long_idx = 1:num_long_steps
 
             temp_S_original(i) = EV.S_original;
             temp_S_mod(i) = EV.S_modified;
-            temp_P_current(i) = EV.P_current;
+            temp_P_current(i) = EV.P_current; % 合约视角下的功率
             temp_E_current(i) = EV.E_actual; % [新增] 记录实际电量
             
             % [修改] 计算单体调节潜力 (物理视角 - 使用实际离网时间)
             t_dep_actual_h = EV.t_dep_actual / 60;
             is_physically_online = (current_absolute_hour >= (EV.t_in / 60)) && ...
                                    (current_absolute_hour < t_dep_actual_h);
+            
+            % [新增] 计算实际物理功率 (如果已经提前离网，则功率为0)
+            if is_physically_online
+                temp_P_actual(i) = EV.P_current;
+            else
+                temp_P_actual(i) = 0;
+            end
             
             if EV.ptcp && is_physically_online 
                  P_base_i = EV.P_base_sequence(step_idx); % 获取当前短步的基线功率
@@ -366,7 +376,8 @@ for long_idx = 1:num_long_steps
 
         results.lambda(step_idx) = lambda_star;
         results.S_agg(step_idx) = S_agg_current;
-        results.P_agg(step_idx) = sum(temp_P_current);
+        results.P_agg(step_idx) = sum(temp_P_current); % 合约总功率
+        results.P_agg_actual(step_idx) = sum(temp_P_actual); % [新增] 实际总功率(考虑失约)
         results.P_agg_ptcp(step_idx) = sum(temp_P_current(ptcp_vec)); % [新增] 计算参与聚合的EV总功率
         results.P_cu(step_idx) = temp_P_current(10);
 
@@ -402,32 +413,78 @@ catch ME_save
     fprintf('*** 保存结果文件时出错: %s ***\n', ME_save.message);
 end
 
-% [修改] 可视化失约风险验证 (带阴影的对比图)
-figure('Name', 'EV用户失约行为对调节能力的影响验证', 'Color', 'w');
+% 设置绘图字体
+defaultFont = 'Microsoft YaHei';
 
+% 1. 可视化失约风险验证 (调节能力对比)
+f1 = figure('Name', 'EV用户失约行为对调节能力的影响验证', 'Color', 'w');
 % 上调潜力对比
 subplot(2,1,1);
-plot(time_points_absolute, results.EV_Up, 'r--', 'LineWidth', 1.5, 'DisplayName', '聚合商预估潜力 (基于合约)');
+plot(time_points_absolute, results.EV_Up, 'r--', 'LineWidth', 1.5, 'DisplayName', '合约潜力');
 hold on;
-plot(time_points_absolute, results.EV_Up_Individual_Sum, 'r-', 'LineWidth', 1.5, 'DisplayName', '实际物理潜力 (计及失约)');
+plot(time_points_absolute, results.EV_Up_Individual_Sum, 'r-', 'LineWidth', 1.5, 'DisplayName', '失约潜力');
 % 填充差值区域 (风险)
 x_conf = [time_points_absolute, fliplr(time_points_absolute)];
 y_conf = [results.EV_Up, fliplr(results.EV_Up_Individual_Sum)];
 fill(x_conf, y_conf, 'r', 'FaceAlpha', 0.1, 'EdgeColor', 'none', 'DisplayName', '失约造成的容量缺口');
-ylabel('上调潜力 (kW)');
-title('用户失约行为下的调节能力偏差验证 (上调)');
-legend('Location', 'best'); grid on; 
+ylabel('上调潜力 (kW)', 'FontName', defaultFont);
+title('用户失约行为下的调节能力偏差验证 (上调)', 'FontName', defaultFont);
+legend('Location', 'best', 'FontName', defaultFont); grid on; 
 xlim([simulation_start_hour, simulation_end_hour]);
+set(gca, 'FontName', defaultFont);
 
 % 下调潜力对比
 subplot(2,1,2);
-plot(time_points_absolute, results.EV_Down, 'b--', 'LineWidth', 1.5, 'DisplayName', '聚合商预估潜力 (基于合约)');
+plot(time_points_absolute, results.EV_Down, 'b--', 'LineWidth', 1.5, 'DisplayName', '合约潜力');
 hold on;
-plot(time_points_absolute, results.EV_Down_Individual_Sum, 'b-', 'LineWidth', 1.5, 'DisplayName', '实际物理潜力 (计及失约)');
+plot(time_points_absolute, results.EV_Down_Individual_Sum, 'b-', 'LineWidth', 1.5, 'DisplayName', '失约潜力');
 % 填充差值区域
 y_conf_down = [results.EV_Down, fliplr(results.EV_Down_Individual_Sum)];
 fill(x_conf, y_conf_down, 'b', 'FaceAlpha', 0.1, 'EdgeColor', 'none', 'DisplayName', '失约造成的容量缺口');
-ylabel('下调潜力 (kW)'); xlabel('时间 (小时)');
-title('用户失约行为下的调节能力偏差验证 (下调)');
-legend('Location', 'best'); grid on; 
+ylabel('下调潜力 (kW)', 'FontName', defaultFont); xlabel('时间 (小时)', 'FontName', defaultFont);
+title('用户失约行为下的调节能力偏差验证 (下调)', 'FontName', defaultFont);
+legend('Location', 'best', 'FontName', defaultFont); grid on; 
 xlim([simulation_start_hour, simulation_end_hour]);
+set(gca, 'FontName', defaultFont);
+
+% 保存图1
+exportgraphics(f1, 'EV用户失约调节能力验证.png', 'Resolution', 300);
+exportgraphics(f1, 'EV用户失约调节能力验证.emf', 'Resolution', 300);
+
+% 2. [新增] 可视化失约对聚合功率的影响
+f2 = figure('Name', 'EV用户失约行为对聚合功率的影响验证', 'Color', 'w');
+
+% 1) 绘制合约预估功率 (蓝色虚线 - 代表理想情况)
+plot(time_points_absolute, results.P_agg, 'b--', 'LineWidth', 1.5, ...
+    'DisplayName', '合约功率');
+hold on;
+
+% 2) 绘制实际聚合功率 (红色实线 - 代表风险情况)
+plot(time_points_absolute, results.P_agg_actual, 'r-', 'LineWidth', 1.5, ...
+    'DisplayName', '失约功率');
+
+% 3) 填充差值区域 (红色半透明 - 突出缺口)
+% 构造填充多边形的顶点
+x_conf = [time_points_absolute, fliplr(time_points_absolute)];
+y_conf_power = [results.P_agg, fliplr(results.P_agg_actual)];
+fill(x_conf, y_conf_power, 'r', 'FaceAlpha', 0.15, 'EdgeColor', 'none', ...
+    'DisplayName', '失约造成的功率偏差');
+
+% 4) 坐标轴设置
+ylabel('聚合功率 (kW)', 'FontName', defaultFont, 'FontSize', 12); 
+xlabel('时间 (小时)', 'FontName', defaultFont, 'FontSize', 12);
+title('用户失约行为下的聚合功率偏差验证', 'FontName', defaultFont, 'FontSize', 14);
+legend('Location', 'best', 'FontName', defaultFont, 'FontSize', 10); 
+grid on; box on;
+
+% 关键修改：强制横坐标范围从 8:00 (Day 1) 到 32:00 (Day 2, 即次日8:00)
+xlim([8, 32]); 
+% 设置刻度：每4小时一个刻度，更清晰
+xticks(8:4:32);
+xticklabels({'08:00','12:00','16:00','20:00','00:00','04:00','08:00'});
+
+set(gca, 'FontName', defaultFont, 'FontSize', 11);
+
+% 保存图2
+exportgraphics(f2, 'EV用户失约聚合功率验证.png', 'Resolution', 300);
+exportgraphics(f2, 'EV用户失约聚合功率验证.emf', 'Resolution', 300);
