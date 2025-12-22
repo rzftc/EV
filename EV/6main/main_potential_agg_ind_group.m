@@ -1,7 +1,9 @@
-%% main_potential_agg_ind.m
+%% main_potential_agg_ind_8am.m
 % (新增功能: 同时计算并对比“单体求和”潜力 - 包含分组聚合改进)
 % (本次修改: 增加聚合模型计算的实时功率 results.EV_Power，用于验证)
 % (本次修改: 增加 results.P_agg_ptcp，保存参与聚合EV的运行功率)
+% (本次修改: 特定组(PN=6.6, C=26.9, 参与聚合)的期望SOC与Lambda对比，保存高DPI图)
+% (本次修改: 强制同质化参数，并修正 S_agg_prime 的计算逻辑为直接平均)
 
 clc; clear; close all;
 rng(2024);
@@ -135,6 +137,53 @@ E_ini_cell = num2cell(E_ini_vec);
 P_current_init_cell = num2cell(zeros(num_evs, 1));
 [EVs.P_current] = P_current_init_cell{:};
 
+%% [新增] 定义特定观察组 (PN=6.6, C=26.9, 且参与聚合)
+target_PN = 6.6;
+target_C = 26.86; % 注意excel中可能存在的微小精度差异，这里保持一致
+% 筛选: 物理参数匹配 AND 实际参与聚合(ptcp=1)
+group_indices = find(abs([EVs.P_N] - target_PN) < 1e-3 & ...
+                     abs([EVs.C] - target_C) < 1e-3 & ...
+                     [EVs.ptcp] == 1);
+fprintf('特定观察组 (P_N=%.1f, C=%.1f, 参与聚合) 共有 %d 辆车\n', target_PN, target_C, length(group_indices));
+
+% [本次新增修改] 强制将该组内所有车辆的参数设置为完全一致
+if ~isempty(group_indices)
+    fprintf('正在将特定组 (ID: %d ...) 的 %d 辆车参数(时间/电量)设置为完全一致...\n', group_indices(1), length(group_indices));
+    ref_idx = group_indices(1);
+    ref_EV = EVs(ref_idx);
+    
+    for k = 1:length(group_indices)
+        idx = group_indices(k);
+        % 1. 强制统一时间参数
+        EVs(idx).t_in = ref_EV.t_in;
+        EVs(idx).t_dep = ref_EV.t_dep;
+        
+        % 2. 强制统一电量参数
+        EVs(idx).E_ini = ref_EV.E_ini;
+        EVs(idx).E_tar = ref_EV.E_tar;
+        EVs(idx).E_tar_original = ref_EV.E_tar_original;
+        EVs(idx).SOC_original = ref_EV.SOC_original;
+        
+        % 3. 强制统一调节边界
+        EVs(idx).E_reg_min = ref_EV.E_reg_min;
+        EVs(idx).E_reg_max = ref_EV.E_reg_max;
+        
+        % 4. 重置状态变量 (确保E_exp等从新的起点开始)
+        EVs(idx).E_exp = EVs(idx).E_ini;
+        EVs(idx).E_actual = EVs(idx).E_ini;
+        EVs(idx).E_current = EVs(idx).E_ini;
+        EVs(idx).eta = ref_EV.eta; % <--- 关键！
+        EVs(idx).r   = ref_EV.r;   % <--- 关键！
+        % 5. 重新计算充电视窗
+        t_ch = 60 * (EVs(idx).E_tar - EVs(idx).E_ini) / EVs(idx).P_N;
+        EVs(idx).tau_rem = max(t_ch, 0);
+    end
+end
+
+% [新增] 在 results 结构体中增加存储空间
+results.S_agg_group_raw = zeros(1, total_steps);   % 存储该组的原始聚合SOC (S)
+results.S_agg_group_prime = zeros(1, total_steps); % 存储该组的变换后聚合SOC (S') -> 用于和 lambda 比较
+
 %% 初始化聚合SOC 和 基线功率
 S_agg_current = mean([EVs.SOC_original]);
 
@@ -218,7 +267,6 @@ for long_idx = 1:num_long_steps
         parfor i = 1:num_evs
             EV = EVs_in_parfor(i);
             EV = updateLockState(EV, t_current_minute_abs);
-
             EV_for_handle = EV;
             EV_temp_with_handle = generateDemandCurve(EV_for_handle);
             current_P_val = 0;
@@ -251,7 +299,6 @@ for long_idx = 1:num_long_steps
             temp_E_current(i) = EV.E_actual; % [新增] 记录实际电量
             temp_S_prime(i) = getSPrime(EV);
             temp_substate(i) = strcmp(EV.substate, 'ON');
-            
             % (新增) 计算单体调节潜力
             is_online_h = (current_absolute_hour >= (EV.t_in / 60)) && (current_absolute_hour < (EV.t_dep / 60)); % 判断是否在线 (小时)
             
@@ -298,10 +345,10 @@ for long_idx = 1:num_long_steps
             
             for g = 1:length(group_edges)-1
                 group_mask = (t_rem_all >= group_edges(g)) & (t_rem_all < group_edges(g+1));
-                group_indices = active_participating_indices(group_mask);
+                group_indices_in_agg = active_participating_indices(group_mask);
                 
-                if ~isempty(group_indices)
-                    group_EVs = EVs(group_indices);
+                if ~isempty(group_indices_in_agg)
+                    group_EVs = EVs(group_indices_in_agg);
                     
                     E_reg_min_agg = sum([group_EVs.E_reg_min]);
                     E_reg_max_agg = sum([group_EVs.E_reg_max]);
@@ -326,6 +373,42 @@ for long_idx = 1:num_long_steps
                     agg_P_real = agg_P_real + p_real_agg;
                 end
             end
+        end
+
+        %% [新增] 计算特定组的聚合 SOC
+        % 1. 提取该组 (PN=6.6, C=26.9, ptcp=1)
+        current_group_EVs = EVs(group_indices);
+        
+        % 2. 筛选出当前处于“在线”状态的车辆 (LockON / ON)
+        group_active_mask = strcmp({current_group_EVs.state}, 'ON') | strcmp({current_group_EVs.state}, 'LockON');
+        active_group_EVs = current_group_EVs(group_active_mask);
+        
+        if ~isempty(active_group_EVs)
+            sum_E_diff = 0;
+            sum_Cr = 0;
+            sum_S_prime = 0;
+            
+            for k = 1:length(active_group_EVs)
+                ev_k = active_group_EVs(k);
+                % 累加偏差能量 (备用)
+                sum_E_diff = sum_E_diff + (ev_k.E_actual - ev_k.E_exp);
+                sum_Cr = sum_Cr + (ev_k.C * mean(ev_k.r)); 
+                
+                % [关键修改] 累加 S' (直接使用 getSPrime 计算每辆车当前的 S')
+                % 这样可以保证与 Lambda (S'域) 的比较是公平的，且消除了从 S_raw 反推 S' 的误差
+                sum_S_prime = sum_S_prime + getSPrime(ev_k);
+            end
+            
+            % 计算该组的加权平均原始 SOC
+            results.S_agg_group_raw(step_idx) = - sum_E_diff / sum_Cr;
+            
+            % [关键修改] 直接使用平均 S' 作为输出
+            results.S_agg_group_prime(step_idx) = sum_S_prime / length(active_group_EVs);
+            
+        else
+            % 如果该组当前没有车在线
+            results.S_agg_group_raw(step_idx) = NaN;
+            results.S_agg_group_prime(step_idx) = NaN;
         end
 
         %% 记录结果
@@ -372,19 +455,86 @@ try
 catch ME_save
     fprintf('*** 保存结果文件时出错: %s ***\n', ME_save.message);
 end
-% 
-% % (修改) 仅保留潜力对比可视化
-% figure;
-% plot(time_points_absolute, results.EV_Up, 'r-', 'LineWidth', 1.5, 'DisplayName', '聚合模型 上调潜力 (results.EV_Up)');
-% hold on;
-% plot(time_points_absolute, results.EV_Down, 'b-', 'LineWidth', 1.5, 'DisplayName', '聚合模型 下调潜力 (results.EV_Down)');
-% plot(time_points_absolute, results.EV_Up_Individual_Sum, 'r--', 'LineWidth', 1.5, 'DisplayName', '单体求和 上调潜力 (results.EV_Up_Individual_Sum)');
-% plot(time_points_absolute, results.EV_Down_Individual_Sum, 'b--', 'LineWidth', 1.5, 'DisplayName', '单体求和 下调潜力 (results.EV_Down_Individual_Sum)');
-% % (新增) 绘制新添加的 M x T 个体潜力矩阵的 *总和*，用于验证
-% 
-% xlabel('Time (hours)');
-% ylabel('Potential (kW)');
-% title('EV 调节潜力对比: 聚合模型 vs 单体求和');
-% legend;
-% grid on;
-%
+
+%% [独立绘图模块] 组内微观-宏观响应全景图 (单体S' vs 聚合S' vs Lambda)
+% 目的: 验证参数完全相同的单体在 Lambda 控制下的分化与跟随行为
+
+% 1. 检查是否存在特定组索引 (group_indices)
+if ~exist('group_indices', 'var') || isempty(group_indices)
+    warning('未找到 group_indices 变量，请确保主程序已运行且筛选了特定组。正在尝试重新筛选...');
+    target_PN = 6.6; target_C = 26.86;
+    group_indices = find(abs([EVs.P_N] - target_PN) < 1e-3 & ...
+                         abs([EVs.C] - target_C) < 1e-3 & ...
+                         [EVs.ptcp] == 1);
+end
+
+if ~isempty(group_indices)
+    fprintf('正在绘制 %d 辆同质化单体 S'' 轨迹与 Lambda 的对比图...\n', length(group_indices));
+    
+    % 创建画布
+    figure('Name', 'Group Micro-Macro Response', 'Color', 'w', 'Position', [100, 100, 1000, 600]);
+    hold on;
+    
+    % --- Layer 1: 绘制组内每一辆单体的 S' 轨迹 (灰色细线) ---
+    % 注意：results.EV_S_mod 存储的就是 S' (S_modified)
+    % 为了避免图例爆炸，只给第一条线加标签，其他的 HandleVisibility off
+    
+    % 提取该组所有单体的 S' 数据矩阵
+    group_s_prime_data = results.EV_S_mod(group_indices, :);
+    
+    % 绘制所有单体轨迹 (淡灰色，透明度低一点)
+    h_ind = plot(time_points_absolute, group_s_prime_data, ...
+        'Color', [0.7, 0.7, 0.7, 0.5], ... % 灰色，半透明
+        'LineWidth', 0.5); 
+    
+    % 调整图例：将所有单体线的 HandleVisibility 设为 off
+    for k = 1:length(h_ind)
+        h_ind(k).HandleVisibility = 'off';
+    end
+    % 随便画一条假的灰色线用于生成图例
+    h_legend_ind = plot(nan, nan, 'Color', [0.6, 0.6, 0.6], 'LineWidth', 1, 'DisplayName', '单体期望SOC');
+    
+    
+    % --- Layer 2: 绘制该组的聚合平均 S' (蓝色粗实线) ---
+    h_agg = plot(time_points_absolute, results.S_agg_group_prime, ...
+        'Color', 'b', ...
+        'LineWidth', 2.5, ...
+        'DisplayName', '聚合均值期望SOC');
+        
+    % --- Layer 3: 绘制系统指令 Lambda (红色粗虚线) ---
+    h_lambda = plot(time_points_absolute, results.lambda, ...
+        'Color', 'r', ...
+        'LineStyle', '--', ...
+        'LineWidth', 2.5, ...
+        'DisplayName', 'lambda');
+    
+    hold off;
+    
+    % --- 美化与标注 ---
+    % 设置关注的时间段 (如 21:00 - 次日 04:00)，也可以全时段
+    % xlim([21, 28]); 
+    xlim([simulation_start_hour, simulation_end_hour]);
+    
+    xlabel('时间 (小时)', 'FontSize', 12, 'FontName', 'SimHei');
+    ylabel('归一化期望SOC', 'FontSize', 12, 'FontName', 'SimHei');
+    grid on;
+    box on;
+    set(gca, 'FontSize', 12);
+    
+    % 图例
+    legend([h_legend_ind, h_agg, h_lambda], 'Location', 'best', 'FontSize', 11, 'FontName', 'SimHei');
+    
+    % --- 保存图片 ---
+    output_img_name = 'lamda_soc_同组对比.png';
+    print(gcf, output_img_name, '-dpng', '-r600');
+    
+    % 如果是 Windows，额外保存 EMF 矢量图
+    if ispc
+        print(gcf, 'lamda_soc_同组对比.emf', '-dmeta');
+    end
+    
+    fprintf('绘图完成，已保存为 %s\n', output_img_name);
+    
+else
+    warning('未找到符合条件的组，无法绘图。');
+end

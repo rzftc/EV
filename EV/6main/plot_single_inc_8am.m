@@ -288,7 +288,7 @@ end
 fprintf('正在绘制图 7 (不同调节时长上调节能力对比)...\n');
 
 % 定义需加载的文件名、步长与标签
-file_list = {'main_potential_5min_1000.mat', 'main_potential_15min_1000.mat', 'main_potential_60min_1000.mat'};
+file_list = {'main_potential_5min_1000_8am.mat', 'main_potential_15min_1000_8am.mat', 'main_potential_60min_1000_8am.mat'};
 dt_list = [5, 15, 60]; % 对应每个文件的步长
 legend_labels = {'t_{adj}=5min', 't_{adj}=15min', 't_{adj}=60min'};
 line_colors = {'r', 'g', 'b'}; 

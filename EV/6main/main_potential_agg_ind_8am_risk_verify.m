@@ -457,7 +457,6 @@ fill(x_conf, y_conf_power, 'r', 'FaceAlpha', 0.15, 'EdgeColor', 'none', ...
 % 坐标设置
 ylabel('聚合功率 (kW)', 'FontName', defaultFont, 'FontSize', 12); 
 xlabel('时间 (小时)', 'FontName', defaultFont, 'FontSize', 12);
-title('用户失约行为下的聚合功率偏差验证', 'FontName', defaultFont, 'FontSize', 14);
 legend('Location', 'best', 'FontName', defaultFont, 'FontSize', 10); 
 grid on; box on;
 
