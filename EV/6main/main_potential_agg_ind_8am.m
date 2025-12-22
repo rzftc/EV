@@ -189,8 +189,8 @@ for long_idx = 1:num_long_steps
     end
     %% 长时间步处理
     [lambda_star] = aggregateEVs(EVs, P_tar(long_idx));
-    [~, S_agg_next] = calculateVirtualSOC_agg(EVs, dt_long_minutes);
-
+    % [~, S_agg_next] = calculateVirtualSOC_agg(EVs, dt_long_minutes);
+    
     %% 内层循环（短时间步长）
     for short_idx = 1:num_short_per_long
         step_idx = (long_idx - 1) * num_short_per_long + short_idx;
@@ -327,7 +327,8 @@ for long_idx = 1:num_long_steps
                 end
             end
         end
-
+        [~, S_agg_next] = calculateVirtualSOC_agg(EVs, dt_minutes);
+        S_agg_current = S_agg_next;
         %% 记录结果
         results.EV_S_original(:, step_idx) = temp_S_original;
         results.EV_S_mod(:, step_idx) = temp_S_mod;
@@ -357,7 +358,7 @@ for long_idx = 1:num_long_steps
     end % 结束 short_idx
 
     %% 更新聚合SOC
-    S_agg_current = S_agg_next;
+    % S_agg_current = S_agg_next;
 
 end % 结束 long_idx
 

@@ -75,7 +75,55 @@ if exist('results', 'var')
     % 保存图像 (无标题，高DPI，中文名)
     print(fig1, '功率跟踪效果分析.png', '-dpng', '-r600');
 end
-
+% %% --------------------------------------------------
+% % [新增] 图 9: Lambda 与 所有EV平均期望SOC (S_original) 协同分析
+% % 保存为: 全体平均SOC与Lambda.png
+% % --------------------------------------------------
+% if exist('results', 'var')
+%     fprintf('正在绘制图 9 (全体平均SOC vs Lambda)...\n');
+% 
+%     fig9 = figure('Name', '全体平均SOC与Lambda协同', 'Position', [200 450 1000 400], 'NumberTitle', 'off');
+% 
+%     % 1. 计算所有EV的 S_original 平均值 (按列求平均)
+%     % results.EV_S_original 维度为 [num_evs, total_steps]
+%     % 使用 mean 函数对第1维度（行，即不同EV）求平均
+%     avg_S_original = mean(results.EV_S_original, 1);
+% 
+%     % 2. 左侧坐标轴（平均 S_original）
+%     yyaxis left;
+%     h1 = plot(time_hours, avg_S_original, ...
+%         'LineWidth', 1.5, ...
+%         'Color', [0.8 0.2 0.2], ... % 红色系
+%         'DisplayName', '平均期望SOC (Avg S_{original})');
+%     ylabel('平均期望SOC', 'FontSize', 14, 'Color', [0.8 0.2 0.2]);
+%     % 这里的Y轴范围可以根据实际数据的波动情况进行调整
+%     % ylim([-1, 1]); 
+%     set(gca, 'YColor', [0.8 0.2 0.2]);
+% 
+%     % 3. 右侧坐标轴（Lambda）
+%     yyaxis right;
+%     h2 = plot(time_hours, results.lambda, ...
+%         'LineWidth', 1.2, ...
+%         'Color', [0.2 0.4 0.8], ... % 蓝色系
+%         'DisplayName', '\lambda^*');
+%     ylabel('\lambda^*', 'FontSize', 14, 'Color', [0.2 0.4 0.8]);
+%     ylim([-2, 2]); % 保持与图3一致的范围，方便对比
+%     set(gca, 'YColor', [0.2 0.4 0.8]);
+% 
+%     % 4. 公共设置
+%     xlabel('时间 (小时)', 'FontSize', 14);
+%     set(gca, 'FontSize', 12);
+%     xlim([simulation_start_hour, simulation_start_hour + 24]); 
+%     set(gca, 'XTick', x_ticks, 'XTickLabel', x_tick_labels);
+%     grid on;
+% 
+%     % 图例
+%     legend([h1, h2], 'Location', 'northwest', 'FontSize', 12);
+%     title('Lambda 与 全体EV平均期望SOC 关系图');
+% 
+%     % 5. 保存图像
+%     print(fig9, '全体平均SOC与Lambda.png', '-dpng', '-r600');
+% end
 %% --------------------------------------------------
 % [新增] 图 2: 聚合模型实时功率与实际统计功率对比
 % 保存为: 聚合功率计算验证.png
