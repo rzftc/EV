@@ -2,7 +2,7 @@
 % (新增功能: 同时计算并对比“单体求和”潜力 - 包含分组聚合改进)
 % (本次修改: 增加聚合模型计算的实时功率 results.EV_Power，用于验证)
 % (本次修改: 增加 results.P_agg_ptcp，保存参与聚合EV的运行功率)
-% (本次修改: 特定组(PN=6.6, C=26.9, 参与聚合)的期望SOC与Lambda对比，保存高DPI图)
+% (本次修改: 特定组(PN=6.6, C=26.9, 参与聚合)的电量偏差度与Lambda对比，保存高DPI图)
 % (本次修改: 强制同质化参数，并修正 S_agg_prime 的计算逻辑为直接平均)
 
 clc; clear; close all;
@@ -446,15 +446,15 @@ end % 结束 long_idx
 
 results.P_tar = repelem(P_tar, num_short_per_long);
 
-%% 结果保存与可视化
-outputFileName = 'main_potential_5min_1000_8am.mat'; 
-fprintf('\n正在保存结果到 %s ...\n', outputFileName);
-try
-    save(outputFileName, 'results', '-v7.3');
-    fprintf('结果保存成功。\n');
-catch ME_save
-    fprintf('*** 保存结果文件时出错: %s ***\n', ME_save.message);
-end
+% %% 结果保存与可视化
+% outputFileName = 'main_potential_5min_1000_8am.mat'; 
+% fprintf('\n正在保存结果到 %s ...\n', outputFileName);
+% try
+%     save(outputFileName, 'results', '-v7.3');
+%     fprintf('结果保存成功。\n');
+% catch ME_save
+%     fprintf('*** 保存结果文件时出错: %s ***\n', ME_save.message);
+% end
 
 %% [独立绘图模块] 组内微观-宏观响应全景图 (单体S' vs 聚合S' vs Lambda)
 % 目的: 验证参数完全相同的单体在 Lambda 控制下的分化与跟随行为
@@ -492,14 +492,14 @@ if ~isempty(group_indices)
         h_ind(k).HandleVisibility = 'off';
     end
     % 随便画一条假的灰色线用于生成图例
-    h_legend_ind = plot(nan, nan, 'Color', [0.6, 0.6, 0.6], 'LineWidth', 1, 'DisplayName', '单体期望SOC');
+    h_legend_ind = plot(nan, nan, 'Color', [0.6, 0.6, 0.6], 'LineWidth', 1, 'DisplayName', '单体电量偏差度');
     
     
     % --- Layer 2: 绘制该组的聚合平均 S' (蓝色粗实线) ---
-    h_agg = plot(time_points_absolute, results.S_agg_group_prime, ...
+    h_agg = plot(time_points_absolute, results.S_agg_group_raw, ...
         'Color', 'b', ...
         'LineWidth', 2.5, ...
-        'DisplayName', '聚合均值期望SOC');
+        'DisplayName', '聚合均值电量偏差度');
         
     % --- Layer 3: 绘制系统指令 Lambda (红色粗虚线) ---
     h_lambda = plot(time_points_absolute, results.lambda, ...
@@ -516,7 +516,7 @@ if ~isempty(group_indices)
     xlim([simulation_start_hour, simulation_end_hour]);
     
     xlabel('时间 (小时)', 'FontSize', 12, 'FontName', 'SimHei');
-    ylabel('归一化期望SOC', 'FontSize', 12, 'FontName', 'SimHei');
+    ylabel('归一化电量偏差度', 'FontSize', 12, 'FontName', 'SimHei');
     grid on;
     box on;
     set(gca, 'FontSize', 12);

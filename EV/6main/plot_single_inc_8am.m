@@ -4,7 +4,7 @@ clear;
 close all;
 
 %% 1. 加载数据
-resultsFile = 'main_potential_5min_1000_8am.mat';
+resultsFile = 'main_potential_5min_1000_8am_bound.mat';
 fprintf('正在加载结果文件: %s\n', resultsFile);
 
 if ~exist(resultsFile, 'file')
@@ -20,7 +20,7 @@ end
 % 仿真参数 (必须与 main_potential_agg_ind.m 匹配)
 dt_short = 5; % 默认短步长为 5 分钟
 simulation_start_hour = 8; % 仿真开始时间
-selected_ev = 46; % 选择绘制的EV编号
+selected_ev = 842; % 选择绘制的EV编号
 
 % 计算时间轴 (小时) - 这里的 total_steps 基于 results 计算
 if exist('results', 'var')
@@ -55,7 +55,7 @@ if exist('results', 'var')
     hold on;
 
     % 绘制实际功率（深绿色实线）
-    plot(time_hours, results.P_agg_ptcp, ...
+    plot(time_hours, results.P_agg, ...
         'LineWidth', 1.5, ...
         'Color', [0 0.5 0], ...
         'DisplayName', '实际功率');
@@ -76,7 +76,7 @@ if exist('results', 'var')
     print(fig1, '功率跟踪效果分析.png', '-dpng', '-r600');
 end
 % %% --------------------------------------------------
-% % [新增] 图 9: Lambda 与 所有EV平均期望SOC (S_original) 协同分析
+% % [新增] 图 9: Lambda 与 所有EV平均电量偏差度 (S_original) 协同分析
 % % 保存为: 全体平均SOC与Lambda.png
 % % --------------------------------------------------
 % if exist('results', 'var')
@@ -94,8 +94,8 @@ end
 %     h1 = plot(time_hours, avg_S_original, ...
 %         'LineWidth', 1.5, ...
 %         'Color', [0.8 0.2 0.2], ... % 红色系
-%         'DisplayName', '平均期望SOC (Avg S_{original})');
-%     ylabel('平均期望SOC', 'FontSize', 14, 'Color', [0.8 0.2 0.2]);
+%         'DisplayName', '平均电量偏差度 (Avg S_{original})');
+%     ylabel('平均电量偏差度', 'FontSize', 14, 'Color', [0.8 0.2 0.2]);
 %     % 这里的Y轴范围可以根据实际数据的波动情况进行调整
 %     % ylim([-1, 1]); 
 %     set(gca, 'YColor', [0.8 0.2 0.2]);
@@ -119,7 +119,7 @@ end
 % 
 %     % 图例
 %     legend([h1, h2], 'Location', 'northwest', 'FontSize', 12);
-%     title('Lambda 与 全体EV平均期望SOC 关系图');
+%     title('Lambda 与 全体EV平均电量偏差度 关系图');
 % 
 %     % 5. 保存图像
 %     print(fig9, '全体平均SOC与Lambda.png', '-dpng', '-r600');
@@ -183,8 +183,8 @@ if exist('results', 'var')
         main_soc_ind = plot(time_hours, results.EV_S_original(selected_ev, :), ...
             'LineWidth', 1.2, ...
             'Color', [0.8 0.2 0.2], ...
-            'DisplayName', '期望SOC值');
-        ylabel('期望SOC (-1~1)', 'FontSize', 16, 'Color', [0.8 0.2 0.2]);
+            'DisplayName', '电量偏差度');
+        ylabel('电量偏差度 (-1~1)', 'FontSize', 16, 'Color', [0.8 0.2 0.2]);
         ylim([-2 ,2]);
         set(gca, 'YColor', [0.8 0.2 0.2]);
 
@@ -336,7 +336,7 @@ end
 fprintf('正在绘制图 7 (不同调节时长上调节能力对比)...\n');
 
 % 定义需加载的文件名、步长与标签
-file_list = {'main_potential_5min_1000_8am.mat', 'main_potential_15min_1000_8am.mat', 'main_potential_60min_1000_8am.mat'};
+file_list = {'main_potential_5min_1000_8am_bound.mat', 'main_potential_15min_1000_8am_bound.mat', 'main_potential_60min_1000_8am_bound.mat'};
 dt_list = [5, 15, 60]; % 对应每个文件的步长
 legend_labels = {'t_{adj}=5min', 't_{adj}=15min', 't_{adj}=60min'};
 line_colors = {'r', 'g', 'b'}; 

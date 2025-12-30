@@ -50,7 +50,7 @@ ylim([-1.2, 1.2]);
 xlim([start_hour, time_hours(end)]);
 
 % 设置图例
-lgd = legend('控制信号 \lambda', '聚合期望SOC S_{agg}', ...
+lgd = legend('控制信号 \lambda', '电量偏差度 S_{agg}', ...
     'Location', 'best', 'FontSize', 12);
 set(lgd, 'Interpreter', 'tex');
 
@@ -67,7 +67,7 @@ set(gca, 'FontSize', 11);
 title('');
 
 %% 5. 保存为高分辨率图片
-outputFileName = '聚合期望SOC与控制信号对比图.png';
+outputFileName = '电量偏差度与控制信号对比图.png';
 fprintf('正在保存图片到: %s ...\n', outputFileName);
 
 % 方法 A: 使用 exportgraphics (MATLAB R2020a 及以上版本推荐，自动裁剪白边)
