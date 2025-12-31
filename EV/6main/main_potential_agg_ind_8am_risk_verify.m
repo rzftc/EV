@@ -387,7 +387,6 @@ for long_idx = 1:num_long_steps
 end % end long_idx
 
 results.P_tar = repelem(P_tar, num_short_per_long);
-
 %% 9. 结果保存与绘图
 outputFileName = 'main_potential_5min_1000_8am_risk_verify.mat'; 
 fprintf('\n正在保存结果到 %s ...\n', outputFileName);
@@ -401,42 +400,58 @@ end
 % 绘图通用设置
 defaultFont = 'Microsoft YaHei';
 
-% 1. 调节能力偏差验证图
-f1 = figure('Name', 'EV用户失约行为对调节能力的影响验证', 'Color', 'w');
-% 上调
-subplot(2,1,1);
+% -----------------------------------------------------------
+% 1. 调节能力偏差验证图 - 上调 (独立绘图)
+% -----------------------------------------------------------
+f1_up = figure('Name', 'EV用户失约行为对调节能力的影响验证_上调', 'Color', 'w');
 plot(time_points_absolute, results.EV_Up, 'r--', 'LineWidth', 1.5, 'DisplayName', '合约潜力');
 hold on;
 plot(time_points_absolute, results.EV_Up_Individual_Sum, 'r-', 'LineWidth', 1.5, 'DisplayName', '失约潜力');
+
 % 偏差填充
 x_conf = [time_points_absolute, fliplr(time_points_absolute)];
-y_conf = [results.EV_Up, fliplr(results.EV_Up_Individual_Sum)];
-fill(x_conf, y_conf, 'r', 'FaceAlpha', 0.1, 'EdgeColor', 'none', 'DisplayName', '失约造成的容量缺口');
+y_conf_up = [results.EV_Up, fliplr(results.EV_Up_Individual_Sum)];
+fill(x_conf, y_conf_up, 'r', 'FaceAlpha', 0.1, 'EdgeColor', 'none', 'DisplayName', '失约造成的容量缺口');
+
+% 坐标轴与图例 (无标题)
 ylabel('上调潜力 (kW)', 'FontName', defaultFont);
-title('用户失约行为下的调节能力偏差验证 (上调)', 'FontName', defaultFont);
-legend('Location', 'best', 'FontName', defaultFont); grid on; 
+xlabel('时间 (小时)', 'FontName', defaultFont); 
+legend('Location', 'best', 'FontName', defaultFont); 
+grid on; 
 xlim([simulation_start_hour, simulation_end_hour]);
 set(gca, 'FontName', defaultFont);
 
-% 下调
-subplot(2,1,2);
+% 保存上调图 (使用 saveas)
+saveas(f1_up, 'EV用户失约调节能力验证_上调.png');
+saveas(f1_up, 'EV用户失约调节能力验证_上调.emf');
+
+% -----------------------------------------------------------
+% 2. 调节能力偏差验证图 - 下调 (独立绘图)
+% -----------------------------------------------------------
+f1_down = figure('Name', 'EV用户失约行为对调节能力的影响验证_下调', 'Color', 'w');
 plot(time_points_absolute, results.EV_Down, 'b--', 'LineWidth', 1.5, 'DisplayName', '合约潜力');
 hold on;
 plot(time_points_absolute, results.EV_Down_Individual_Sum, 'b-', 'LineWidth', 1.5, 'DisplayName', '失约潜力');
+
 % 偏差填充
 y_conf_down = [results.EV_Down, fliplr(results.EV_Down_Individual_Sum)];
 fill(x_conf, y_conf_down, 'b', 'FaceAlpha', 0.1, 'EdgeColor', 'none', 'DisplayName', '失约造成的容量缺口');
-ylabel('下调潜力 (kW)', 'FontName', defaultFont); xlabel('时间 (小时)', 'FontName', defaultFont);
-title('用户失约行为下的调节能力偏差验证 (下调)', 'FontName', defaultFont);
-legend('Location', 'best', 'FontName', defaultFont); grid on; 
+
+% 坐标轴与图例 (无标题)
+ylabel('下调潜力 (kW)', 'FontName', defaultFont); 
+xlabel('时间 (小时)', 'FontName', defaultFont);
+legend('Location', 'best', 'FontName', defaultFont); 
+grid on; 
 xlim([simulation_start_hour, simulation_end_hour]);
 set(gca, 'FontName', defaultFont);
 
-% 保存
-exportgraphics(f1, 'EV用户失约调节能力验证.png', 'Resolution', 300);
-exportgraphics(f1, 'EV用户失约调节能力验证.emf', 'Resolution', 300);
+% 保存下调图 (使用 saveas)
+saveas(f1_down, 'EV用户失约调节能力验证_下调.png');
+saveas(f1_down, 'EV用户失约调节能力验证_下调.emf');
 
-% 2. 聚合功率偏差验证图
+% -----------------------------------------------------------
+% 3. 聚合功率偏差验证图 (保持不变)
+% -----------------------------------------------------------
 f2 = figure('Name', 'EV用户失约行为对聚合功率的影响验证', 'Color', 'w');
 
 % 合约功率(蓝虚线)
@@ -467,6 +482,6 @@ xticklabels({'08:00','12:00','16:00','20:00','00:00','04:00','08:00'});
 
 set(gca, 'FontName', defaultFont, 'FontSize', 11);
 
-% 保存
-exportgraphics(f2, 'EV用户失约聚合功率验证.png', 'Resolution', 300);
-exportgraphics(f2, 'EV用户失约聚合功率验证.emf', 'Resolution', 300);
+% 保存 (使用 saveas)
+saveas(f2, 'EV用户失约聚合功率验证.png');
+saveas(f2, 'EV用户失约聚合功率验证.emf');
