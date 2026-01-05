@@ -125,31 +125,53 @@ end
 %     print(fig9, '全体平均SOC与Lambda.png', '-dpng', '-r600');
 % end
 %% --------------------------------------------------
-% [新增] 图 2: 聚合模型实时功率与实际统计功率对比
-% 保存为: 聚合功率计算验证.png
+% [修改] 图 2: 聚合模型实时功率与实际统计功率对比 (拆分为全景图与局部放大图)
+% 保存为: 聚合功率计算验证_全景.png, 聚合功率计算验证_放大.png
 % --------------------------------------------------
 if exist('results', 'var') && isfield(results, 'EV_Power')
-    fprintf('正在绘制图 2 (聚合功率计算验证: P_agg vs EV_Power)...\n');
-    fig2 = figure('Name', '聚合功率计算验证', 'Position', [150 150 1000 400], 'NumberTitle', 'off');
+    fprintf('正在绘制图 2 (聚合功率计算验证: 拆分保存)...\n');
 
+    % --- 1. 计算误差与放大区域参数 ---
+    % 计算两者的绝对误差
+    diff_power = abs(results.P_agg - results.EV_Power);
+    [~, max_diff_idx] = max(diff_power); % 找到误差最大的索引
+    
+    % 定义放大窗口 (最大误差时刻的前后 1.5 小时)
+    t_center = time_hours(max_diff_idx);
+    zoom_span = 0.2; % 单侧跨度 (小时)
+    t_zoom_start = max(simulation_start_hour, t_center - zoom_span);
+    t_zoom_end = min(simulation_start_hour + 24, t_center + zoom_span);
+    
+    % 获取放大区域的数据范围 (用于设置子图Y轴)
+    zoom_mask = (time_hours >= t_zoom_start) & (time_hours <= t_zoom_end);
+    % 增加一点余量防止曲线贴边
+    y_zoom_max = max([results.P_agg(zoom_mask), results.EV_Power(zoom_mask)]) * 1.05;
+    y_zoom_min = min([results.P_agg(zoom_mask), results.EV_Power(zoom_mask)]) * 0.95;
+
+    % --- 2. 绘制并保存全景图 (Mother Plot) ---
+    fig2_main = figure('Name', '聚合功率计算验证_全景', 'Position', [150 150 1000 400], 'NumberTitle', 'off');
     hold on;
     
-    % 绘制 P_agg (实际统计值，作为基准，黑色实线)
+    % 绘制 P_agg (黑色实线)
     plot(time_hours, results.P_agg, ...
         'LineWidth', 2.5, ...
         'Color', 'k', ... 
         'DisplayName', '单体功率之和');
 
-    % 绘制 EV_Power (聚合模型计算值，红色虚线)
+    % 绘制 EV_Power (红色虚线)
     plot(time_hours, results.EV_Power, ...
         'LineStyle', '--', ...
         'LineWidth', 2.0, ...
         'Color', 'r', ... 
         'DisplayName', '聚合模型功率');
     
+    % 在全景图中绘制蓝色虚线框，指示被放大的区域
+    rectangle('Position', [t_zoom_start, y_zoom_min, (t_zoom_end - t_zoom_start), (y_zoom_max - y_zoom_min)], ...
+              'EdgeColor', 'b', 'LineStyle', '-.', 'LineWidth', 1, 'HandleVisibility', 'off');
+    
     hold off;
 
-    % 坐标轴和标签设置
+    % 全景图坐标轴设置 (无标题)
     xlabel('时间 (小时)', 'FontSize', 14);
     ylabel('功率 (kW)', 'FontSize', 14);
     set(gca, 'FontSize', 12);
@@ -158,14 +180,36 @@ if exist('results', 'var') && isfield(results, 'EV_Power')
     grid on;
     legend('Location', 'best', 'FontSize', 12);
 
-    % 保存图像
-    print(fig2, '聚合功率计算验证.png', '-dpng', '-r600');
+    % 保存全景图
+    print(fig2_main, '聚合功率计算验证_全景.png', '-dpng', '-r600');
+
+    % --- 3. 绘制并保存局部放大图 (Child Plot) ---
+    fig2_zoom = figure('Name', '聚合功率计算验证_放大', 'Position', [200 200 600 400], 'NumberTitle', 'off');
+    hold on;
+    
+    % 重绘曲线 (保持样式一致)
+    plot(time_hours, results.P_agg, 'k-', 'LineWidth', 2.5, 'DisplayName', '单体功率之和');
+    plot(time_hours, results.EV_Power, 'r--', 'LineWidth', 2.0, 'DisplayName', '聚合模型功率');
+    
+    hold off;
+    
+    % 设置局部坐标轴范围 (聚焦误差最大处)
+    xlim([t_zoom_start, t_zoom_end]);
+    ylim([y_zoom_min, y_zoom_max]);
+    
+    % 局部图坐标轴设置 (无标题)
+   
+    set(gca, 'FontSize', 20);
+    grid on;
+ 
+
+    % 保存放大图
+    print(fig2_zoom, '聚合功率计算验证_放大.png', '-dpng', '-r600');
 else
     if exist('results', 'var')
-        warning('results 结构体中缺少 EV_Power 字段，跳过图 2 绘制。请检查是否运行了包含该字段保存逻辑的最新 main 文件。');
+        warning('results 结构体中缺少 EV_Power 字段，跳过图 2 绘制。');
     end
 end
-
 %% --------------------------------------------------
 % 图 3: Lambda 与 单台EV SOC 协同分析
 % 保存为: 单体SOC与Lambda.png

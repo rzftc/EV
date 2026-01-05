@@ -1,6 +1,7 @@
 %% main_potential_agg_ind.m
 % (修改版: 恢复基于偏差度 r 的原版计算理论)
 % (修改点: deltaE 在 deltaE_down 和 deltaE_up 之间随机生成，并修正 r)
+% (本次更新: 引入8am版本的分组聚合逻辑来计算集群运行功率，统计所有在线EV)
 
 clc; clear; close all;
 rng(2024);
@@ -15,14 +16,14 @@ end
 fprintf('成功加载%d辆EV数据\n', length(EVs));
     
 %% 时间参数定义
-dt_short = 60;     % 短时间步长 (分钟)
+dt_short = 5;     % 短时间步长 (分钟)
 dt_long = 60;       % 长时间步长 (分钟)
 simulation_start_hour = 8;
 simulation_end_hour   = 32;
 dt = dt_short / 60;       % 短步长 (小时)
 dt_minutes = dt_short;    % 短步长 (分钟)
 dt_long_minutes = dt_long;% 长步长 (分钟)
-t_adj = 60 / 60;     % 调节时长 (小时)
+t_adj = 5 / 60;     % 调节时长 (小时)
 
 % 时间轴 (小时)
 time_points_absolute = simulation_start_hour : dt : (simulation_start_hour + t_sim/60 - dt);
@@ -40,7 +41,7 @@ assert(mod(num_long_steps, 24*(60/dt_long)) == 0, '长时间步数必须是24小
 num_evs = length(EVs);
 results = struct(...
     'P_agg',         zeros(1, total_steps), ...
-    'P_agg_ptcp',    zeros(1, total_steps), ... 
+    'P_agg_ptcp',    zeros(1, total_steps), ... % [新增] 参与聚合的EV运行功率
     'P_base',        zeros(1, total_steps), ...
     'S_agg',         zeros(1, total_steps), ...
     'lambda',        zeros(1, total_steps), ...
@@ -51,7 +52,7 @@ results = struct(...
     'P_cu',          zeros(1, total_steps), ...
     'EV_Up',         zeros(1, total_steps), ... 
     'EV_Down',       zeros(1, total_steps), ... 
-    'EV_Power',      zeros(1, total_steps), ... 
+    'EV_Power',      zeros(1, total_steps), ... % [新增] 聚合模型实时功率(此处存所有EV)
     'EV_Up_Individual_Sum',   zeros(1, total_steps), ... 
     'EV_Down_Individual_Sum', zeros(1, total_steps),  ... 
     ...
@@ -314,7 +315,35 @@ for long_idx = 1:num_long_steps
         %% (修改) 计算聚合潜力 (使用单体求和结果)
         agg_DeltaP_plus = individual_sum_DeltaP_plus;
         agg_DeltaP_minus = individual_sum_DeltaP_minus;
-        agg_P_real = sum(temp_P_current);
+        
+        % [重点更新] 参照8am逻辑计算集群运行功率 (ALL EVs, 分组求和逻辑)
+        % 筛选所有在线车辆 (不区分是否参与, 对应 "not just participating")
+        active_indices = find(arrayfun(@(ev, t_abs_h) ...
+            (t_abs_h >= (ev.t_in / 60)) && (t_abs_h < (ev.t_dep / 60)), ...
+            EVs, repmat(current_absolute_hour, num_evs, 1)));
+
+        agg_P_real = 0; % 聚合模型实时功率
+
+        if ~isempty(active_indices)
+            all_t_dep_h = [EVs(active_indices).t_dep] / 60;
+            t_rem_all = all_t_dep_h - current_absolute_hour;
+            
+            % 使用与8am一致的分组边界
+            group_edges = [0, 1, 2, 4, 100]; 
+            
+            for g = 1:length(group_edges)-1
+                group_mask = (t_rem_all >= group_edges(g)) & (t_rem_all < group_edges(g+1));
+                group_indices = active_indices(group_mask);
+                
+                if ~isempty(group_indices)
+                    group_EVs = EVs(group_indices);
+                    
+                    % [只计算功率] 根据分组逻辑累加功率
+                    p_real_agg = sum([group_EVs.P_current]);
+                    agg_P_real = agg_P_real + p_real_agg;
+                end
+            end
+        end
 
         [~, S_agg_next] = calculateVirtualSOC_agg(EVs, dt_minutes);
         S_agg_current = S_agg_next;
@@ -326,13 +355,14 @@ for long_idx = 1:num_long_steps
 
         results.lambda(step_idx) = lambda_star;
         results.S_agg(step_idx) = S_agg_current;
-        results.P_agg(step_idx) = sum(temp_P_current);
-        results.P_agg_ptcp(step_idx) = sum(temp_P_current(ptcp_vec));
+        
+        results.P_agg(step_idx) = sum(temp_P_current);       % (旧版) 集群总运行功率
+        results.P_agg_ptcp(step_idx) = sum(temp_P_current(ptcp_vec)); % 参与聚合的EV总功率
         results.P_cu(step_idx) = temp_P_current(10);
 
         results.EV_Up(step_idx)   = agg_DeltaP_plus;
         results.EV_Down(step_idx) = agg_DeltaP_minus;
-        results.EV_Power(step_idx)= agg_P_real; 
+        results.EV_Power(step_idx)= agg_P_real; % [更新] 记录使用分组逻辑计算出的实时功率
         
         results.EV_Up_Individual_Sum(step_idx)   = individual_sum_DeltaP_plus;
         results.EV_Down_Individual_Sum(step_idx) = individual_sum_DeltaP_minus;
@@ -352,7 +382,7 @@ end % 结束 long_idx
 results.P_tar = repelem(P_tar, num_short_per_long);
 
 %% 结果保存与可视化
-outputFileName = 'main_potential_60min_1000_8am_bound.mat'; 
+outputFileName = 'main_potential_5min_1000_8am_bound.mat'; 
 fprintf('\n正在保存结果到 %s ...\n', outputFileName);
 try
     save(outputFileName, 'results', '-v7.3');
