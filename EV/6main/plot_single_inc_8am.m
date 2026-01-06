@@ -126,7 +126,7 @@ end
 % end
 %% --------------------------------------------------
 % [修改] 图 2: 聚合模型实时功率与实际统计功率对比 (拆分为全景图与局部放大图)
-% 保存为: 聚合功率计算验证_全景.png, 聚合功率计算验证_放大.png
+% 保存为: 聚合功率计算验证_全景.png, 聚合功率计算验证_放大.emf
 % --------------------------------------------------
 if exist('results', 'var') && isfield(results, 'EV_Power')
     fprintf('正在绘制图 2 (聚合功率计算验证: 拆分保存)...\n');
@@ -184,6 +184,7 @@ if exist('results', 'var') && isfield(results, 'EV_Power')
     print(fig2_main, '聚合功率计算验证_全景.png', '-dpng', '-r600');
 
     % --- 3. 绘制并保存局部放大图 (Child Plot) ---
+    % 【修改】保存为 EMF 矢量格式，并去除网格线
     fig2_zoom = figure('Name', '聚合功率计算验证_放大', 'Position', [200 200 600 400], 'NumberTitle', 'off');
     hold on;
     
@@ -199,12 +200,17 @@ if exist('results', 'var') && isfield(results, 'EV_Power')
     
     % 局部图坐标轴设置 (无标题)
    
-    set(gca, 'FontSize', 20);
-    grid on;
+    set(gca, 'FontSize', 22);
+    grid off; % <--- 【修改】去除网格线
  
+    % === 关键修改：保存为 EMF 矢量图 ===
+    % 设置属性以确保 EMF 转换时不带背景色
+    set(gcf, 'Color', 'none'); 
+    set(gca, 'Color', 'none');
+    set(gcf, 'InvertHardcopy', 'off'); 
 
     % 保存放大图
-    print(fig2_zoom, '聚合功率计算验证_放大.png', '-dpng', '-r600');
+    print(fig2_zoom, '聚合功率计算验证_放大.emf', '-dmeta');
 else
     if exist('results', 'var')
         warning('results 结构体中缺少 EV_Power 字段，跳过图 2 绘制。');
