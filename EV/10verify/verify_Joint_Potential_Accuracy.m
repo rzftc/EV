@@ -3,6 +3,13 @@ rng(104, 'twister');
 set(0, 'DefaultAxesFontName', 'Microsoft YaHei');
 set(0, 'DefaultTextFontName', 'Microsoft YaHei');
 
+% ====== 新增：图片输出目录（如不需要可删掉这一段） ======
+outDir = fullfile(pwd, '图像输出');
+if ~exist(outDir, 'dir')
+    mkdir(outDir);
+end
+dpi = 600;  % ====== 新增：高DPI（可按需改为300/600/1200等） ======
+
 der_files = {
     'DER1.mat', 'EV';
     'DER2.mat', 'AC';
@@ -135,7 +142,8 @@ Ratio_Down(valid_idx_down) = Total_Down_True(valid_idx_down) ./ Total_Down_Model
 
 fprintf('正在生成对比图...\n');
 
-figure('Color', 'w', 'Position', [100, 100, 1000, 600]);
+% ===================== 图1：上调分资源堆叠图 =====================
+fig1 = figure('Color', 'w', 'Position', [100, 100, 1000, 600]);
 hold on;
 area_data_up = [];
 legend_str = {};
@@ -144,51 +152,67 @@ for i = 1:length(resources)
     legend_str{end+1} = resources{i};
 end
 area(time_axis, area_data_up);
-title('各类资源上调潜力构成 (聚合模型值)');
 xlabel('时间 (小时)'); ylabel('功率 (kW)');
 legend(legend_str, 'Location', 'best');
 grid on; set(gca, 'FontSize', 12);
 
-figure('Color', 'w', 'Position', [150, 150, 1000, 600]);
+% ====== 新增：保存高DPI PNG（中文文件名） ======
+exportgraphics(fig1, fullfile(outDir, '上调潜力_分资源堆叠图.png'), 'Resolution', dpi);
+
+% ===================== 图2：下调分资源堆叠图 =====================
+fig2 = figure('Color', 'w', 'Position', [150, 150, 1000, 600]);
 hold on;
 area_data_down = [];
 for i = 1:length(resources)
     area_data_down = [area_data_down, data_store.(resources{i}).Down_Model];
 end
 area(time_axis, area_data_down);
-title('各类资源下调潜力构成 (聚合模型值)');
+
 xlabel('时间 (小时)'); ylabel('功率 (kW)');
 legend(legend_str, 'Location', 'best');
 grid on; set(gca, 'FontSize', 12);
 
-figure('Color', 'w', 'Position', [200, 200, 800, 500]);
+% ====== 新增：保存高DPI PNG（中文文件名） ======
+exportgraphics(fig2, fullfile(outDir, '下调潜力_分资源堆叠图.png'), 'Resolution', dpi);
+
+% ===================== 图3：联合上调总量对比 =====================
+fig3 = figure('Color', 'w', 'Position', [200, 200, 800, 500]);
 plot(time_axis, Total_Up_Model, 'r-', 'LineWidth', 1.5, 'DisplayName', '总聚合模型预测 (含波动)');
 hold on;
 plot(time_axis, Total_Up_True, 'k--', 'LineWidth', 1.5, 'DisplayName', '总真值');
-title('联合系统上调潜力对比');
+
 xlabel('时间 (小时)'); ylabel('功率 (kW)');
 legend('Location', 'best'); grid on; set(gca, 'FontSize', 12);
 
-figure('Color', 'w', 'Position', [250, 250, 800, 500]);
+% ====== 新增：保存高DPI PNG（中文文件名） ======
+exportgraphics(fig3, fullfile(outDir, '联合上调潜力_总量对比.png'), 'Resolution', dpi);
+
+% ===================== 图4：联合下调总量对比 =====================
+fig4 = figure('Color', 'w', 'Position', [250, 250, 800, 500]);
 plot(time_axis, Total_Down_Model, 'b-', 'LineWidth', 1.5, 'DisplayName', '总聚合模型预测 (含波动)');
 hold on;
 plot(time_axis, Total_Down_True, 'k--', 'LineWidth', 1.5, 'DisplayName', '总真值');
-title('联合系统下调潜力对比');
+
 xlabel('时间 (小时)'); ylabel('功率 (kW)');
 legend('Location', 'best'); grid on; set(gca, 'FontSize', 12);
 
-figure('Color', 'w', 'Position', [300, 300, 800, 500]);
+% ====== 新增：保存高DPI PNG（中文文件名） ======
+exportgraphics(fig4, fullfile(outDir, '联合下调潜力_总量对比.png'), 'Resolution', dpi);
+
+% ===================== 图5：比值曲线（上/下） =====================
+fig5 = figure('Color', 'w', 'Position', [300, 300, 800, 500]);
 subplot(2,1,1);
 plot(time_axis, Ratio_Up, 'm-', 'LineWidth', 1.5);
 yline(1.0, 'k--', 'LineWidth', 1.5);
-title('上调潜力准确度比值 (真值/模型值)');
 xlabel('时间 (小时)'); ylabel('比值'); ylim([0.5, 1.5]); grid on;
 
 subplot(2,1,2);
 plot(time_axis, Ratio_Down, 'c-', 'LineWidth', 1.5);
 yline(1.0, 'k--', 'LineWidth', 1.5);
-title('下调潜力准确度比值 (真值/模型值)');
 xlabel('时间 (小时)'); ylabel('比值'); ylim([0.5, 1.5]); grid on;
+
+% ====== 新增：保存高DPI PNG（中文文件名） ======
+exportgraphics(fig5, fullfile(outDir, '联合潜力_真值与预测比值曲线.png'), 'Resolution', dpi);
 
 fprintf('\n========== 分布式可控资源联合潜力预测验证报告 ==========\n');
 
