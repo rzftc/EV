@@ -106,15 +106,16 @@ end
 % --- 图 1 设置 ---
 figure(fig1);
 hold off;
-xlabel('时间 (小时)', 'FontSize', 14);
-ylabel('功率 (kW)', 'FontSize', 14);
-set(gca, 'FontSize', 12);
+% 字体放大
+xlabel('时间 (小时)', 'FontSize', 20);
+ylabel('功率 (kW)', 'FontSize', 20);
+set(gca, 'FontSize', 16);
 xlim([simulation_start_hour, simulation_start_hour + 24]); 
 set(gca, 'XTick', x_ticks, 'XTickLabel', x_tick_labels);
 ylim_max = max([base_results.P_agg, base_results.P_tar]) * 1.2; 
 ylim([0 ylim_max]);
 grid on;
-legend('Location', 'northwest', 'FontSize', 10);
+legend('Location', 'northwest', 'FontSize', 16); % 字体放大
 set(fig1, 'Renderer', 'painters'); % 强制矢量渲染
 print(fig1, '多激励功率对比分析.emf', '-dmeta', '-r600');
 fprintf('图 1 绘制完成。\n');
@@ -122,13 +123,14 @@ fprintf('图 1 绘制完成。\n');
 % --- [新增] 图 7 设置 (上调能力) ---
 figure(fig_up);
 hold off;
-xlabel('时间 (小时)', 'FontSize', 14);
-ylabel('上调潜力 (kW)', 'FontSize', 14);
-set(gca, 'FontSize', 12);
+% 字体放大
+xlabel('时间 (小时)', 'FontSize', 20);
+ylabel('上调潜力 (kW)', 'FontSize', 20);
+set(gca, 'FontSize', 16);
 xlim([simulation_start_hour, simulation_start_hour + 24]); 
 set(gca, 'XTick', x_ticks, 'XTickLabel', x_tick_labels);
 grid on;
-legend('Location', 'northwest', 'FontSize', 10);
+legend('Location', 'northwest', 'FontSize', 16); % 字体放大
 set(fig_up, 'Renderer', 'painters');
 print(fig_up, '多激励上调能力对比.emf', '-dmeta', '-r600');
 fprintf('图 7 (上调能力) 绘制完成。\n');
@@ -136,13 +138,14 @@ fprintf('图 7 (上调能力) 绘制完成。\n');
 % --- [新增] 图 8 设置 (下调能力) ---
 figure(fig_down);
 hold off;
-xlabel('时间 (小时)', 'FontSize', 14);
-ylabel('下调潜力 (kW)', 'FontSize', 14);
-set(gca, 'FontSize', 12);
+% 字体放大
+xlabel('时间 (小时)', 'FontSize', 20);
+ylabel('下调潜力 (kW)', 'FontSize', 20);
+set(gca, 'FontSize', 16);
 xlim([simulation_start_hour, simulation_start_hour + 24]); 
 set(gca, 'XTick', x_ticks, 'XTickLabel', x_tick_labels);
 grid on;
-legend('Location', 'northwest', 'FontSize', 10);
+legend('Location', 'northwest', 'FontSize', 16); % 字体放大
 set(fig_down, 'Renderer', 'painters');
 print(fig_down, '多激励下调能力对比.emf', '-dmeta', '-r600');
 fprintf('图 8 (下调能力) 绘制完成。\n');
@@ -150,10 +153,12 @@ fprintf('图 8 (下调能力) 绘制完成。\n');
 % --- [新增] 图 9: 激励价格 vs 聚合整体功率特性曲线 ---
 % 功能：验证 EV 的激励响应死区与饱和区
 fig_curve = figure('Name', 'EV激励价格-聚合整体功率特性', 'Position', [250 250 800 500], 'NumberTitle', 'off');
-plot(incentive_prices, max_agg_powers, 'bo-', 'LineWidth', 2, 'MarkerSize', 8, 'MarkerFaceColor', 'b');
-xlabel('激励电价 (分/kW)', 'FontSize', 14);
-ylabel('聚合整体功率峰值 (kW)', 'FontSize', 14);
-set(gca, 'FontSize', 12);
+% 增加线宽和点的大小
+plot(incentive_prices, max_agg_powers, 'bo-', 'LineWidth', 2.5, 'MarkerSize', 12, 'MarkerFaceColor', 'b');
+% 字体放大
+xlabel('激励电价 (分/kW)', 'FontSize', 20);
+ylabel('聚合整体功率峰值 (kW)', 'FontSize', 20);
+set(gca, 'FontSize', 16);
 grid on;
 set(fig_curve, 'Renderer', 'painters');
 print(fig_curve, 'EV激励价格-聚合整体功率特性.emf', '-dmeta', '-r600');
@@ -179,7 +184,7 @@ else
         'LineWidth', 1.2, ...
         'Color', [0.8 0.2 0.2], ...
         'DisplayName', '期望SOC原始值');
-    ylabel('SOC (-1~1)', 'FontSize', 16, 'Color', [0.8 0.2 0.2]);
+    ylabel('SOC (-1~1)', 'FontSize', 20, 'Color', [0.8 0.2 0.2]); % 字体放大
     ylim([-2 ,2]);
     set(gca, 'YColor', [0.8 0.2 0.2]);
 
@@ -189,17 +194,17 @@ else
         'LineWidth', 1.2, ...
         'Color', [0.2 0.4 0.8], ...
         'DisplayName', '\lambda^*');
-    ylabel('\lambda^*', 'FontSize', 16, 'Color', [0.2 0.4 0.8]);
+    ylabel('\lambda^*', 'FontSize', 20, 'Color', [0.2 0.4 0.8]); % 字体放大
     ylim([-2 ,2]);
     set(gca, 'YColor', [0.2 0.4 0.8]);
 
     % 公共设置
-    xlabel('时间 (小时)', 'FontSize', 16);
-    set(gca, 'FontSize', 12);
+    xlabel('时间 (小时)', 'FontSize', 20); % 字体放大
+    set(gca, 'FontSize', 16); % 刻度字体放大
     xlim([simulation_start_hour, simulation_start_hour + 24]); % [6, 30]
     set(gca, 'XTick', x_ticks, 'XTickLabel', x_tick_labels);
     grid on;
-    legend([main_soc_ind, main_lambda_ind], 'Location', 'northwest', 'FontSize', 14);
+    legend([main_soc_ind, main_lambda_ind], 'Location', 'northwest', 'FontSize', 16); % 字体放大
     
     % 保存图像
     set(fig3, 'Renderer', 'painters');
@@ -234,13 +239,13 @@ else
     hold off;
 
     % 坐标轴和标签设置
-    xlabel('时间 (小时)', 'FontSize', 14);
-    ylabel('电量 (kWh)', 'FontSize', 14);
-    set(gca, 'FontSize', 12);
+    xlabel('时间 (小时)', 'FontSize', 20); % 字体放大
+    ylabel('电量 (kWh)', 'FontSize', 20); % 字体放大
+    set(gca, 'FontSize', 16); % 刻度字体放大
     xlim([simulation_start_hour, simulation_start_hour + 24]); % [6, 30]
     set(gca, 'XTick', x_ticks, 'XTickLabel', x_tick_labels);
     grid on;
-    legend('Location', 'best', 'FontSize', 12);
+    legend('Location', 'best', 'FontSize', 16); % 字体放大
     
     % 保存图像
     set(fig4, 'Renderer', 'painters');
@@ -265,18 +270,18 @@ else
     % 子图1: 入网时间分布
     subplot(1, 2, 1);
     histogram(t_in_h, 24, 'Normalization', 'pdf', 'FaceColor', [0.2 0.6 0.8], 'EdgeColor', 'none');
-    xlabel('入网时间 (小时)', 'FontSize', 12);
-    ylabel('概率密度', 'FontSize', 12);
+    xlabel('入网时间 (小时)', 'FontSize', 20); % 字体放大
+    ylabel('概率密度', 'FontSize', 20); % 字体放大
     grid on;
-    set(gca, 'FontSize', 10);
+    set(gca, 'FontSize', 16); % 刻度字体放大
     
     % 子图2: 离网时间分布
     subplot(1, 2, 2);
     histogram(t_dep_h, 24, 'Normalization', 'pdf', 'FaceColor', [0.8 0.4 0.2], 'EdgeColor', 'none');
-    xlabel('离网时间 (小时)', 'FontSize', 12);
-    ylabel('概率密度', 'FontSize', 12);
+    xlabel('离网时间 (小时)', 'FontSize', 20); % 字体放大
+    ylabel('概率密度', 'FontSize', 20); % 字体放大
     grid on;
-    set(gca, 'FontSize', 10);
+    set(gca, 'FontSize', 16); % 刻度字体放大
     
     % 保存图像
     set(fig5, 'Renderer', 'painters');
@@ -309,13 +314,13 @@ else
     hold off;
     
     % 坐标轴设置
-    xlabel('时间 (小时)', 'FontSize', 14);
-    ylabel('功率 (kW)', 'FontSize', 14);
-    set(gca, 'FontSize', 12);
+    xlabel('时间 (小时)', 'FontSize', 20); % 字体放大
+    ylabel('功率 (kW)', 'FontSize', 20); % 字体放大
+    set(gca, 'FontSize', 16); % 刻度字体放大
     xlim([simulation_start_hour, simulation_start_hour + 24]); 
     set(gca, 'XTick', x_ticks, 'XTickLabel', x_tick_labels);
     grid on;
-    legend('Location', 'best', 'FontSize', 12);
+    legend('Location', 'best', 'FontSize', 16); % 字体放大
     
     % 保存图像
     set(fig6, 'Renderer', 'painters');

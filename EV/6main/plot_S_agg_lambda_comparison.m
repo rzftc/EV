@@ -49,19 +49,20 @@ hold off;
 ylim([-1.2, 1.2]);
 xlim([start_hour, time_hours(end)]);
 
-% 设置图例
+% 设置图例 (字体放大)
 lgd = legend('控制信号 \lambda', '电量偏差度 S_{agg}', ...
-    'Location', 'best', 'FontSize', 12);
+    'Location', 'best', 'FontSize', 16);
 set(lgd, 'Interpreter', 'tex');
 
-% 设置坐标轴标签
-xlabel('时间 (小时)', 'FontSize', 12, 'FontWeight', 'bold');
-ylabel('归一化状态数值', 'FontSize', 12, 'FontWeight', 'bold');
+% 设置坐标轴标签 (字体放大)
+xlabel('时间 (小时)', 'FontSize', 20, 'FontWeight', 'bold');
+ylabel('归一化状态数值', 'FontSize', 20, 'FontWeight', 'bold');
 
 % 开启网格
 grid on;
 set(gca, 'GridLineStyle', '--', 'GridAlpha', 0.4);
-set(gca, 'FontSize', 11);
+% 设置坐标轴刻度字体 (字体放大)
+set(gca, 'FontSize', 16);
 
 % 确保无标题
 title('');

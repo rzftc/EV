@@ -61,69 +61,21 @@ if exist('results', 'var')
         'DisplayName', '实际功率');
     hold off;
 
-    % 坐标轴和标签设置
-    xlabel('时间 (小时)', 'FontSize', 14);
-    ylabel('功率 (kW)', 'FontSize', 14);
-    set(gca, 'FontSize', 12);
+    % 坐标轴和标签设置 (字体放大)
+    xlabel('时间 (小时)', 'FontSize', 20);
+    ylabel('功率 (kW)', 'FontSize', 20);
+    set(gca, 'FontSize', 16); % 坐标轴刻度字体
     xlim([simulation_start_hour, simulation_start_hour + 24]); % [6, 30]
     set(gca, 'XTick', x_ticks, 'XTickLabel', x_tick_labels);
     ylim_max = max([results.P_agg, results.P_tar]) * 1.1;
     ylim([0 ylim_max]);
     grid on;
-    legend('Location', 'northwest', 'FontSize', 12);
+    legend('Location', 'northwest', 'FontSize', 16);
 
     % 保存图像 (无标题，高DPI，中文名)
     print(fig1, '功率跟踪效果分析.png', '-dpng', '-r600');
 end
-% %% --------------------------------------------------
-% % [新增] 图 9: Lambda 与 所有EV平均电量偏差度 (S_original) 协同分析
-% % 保存为: 全体平均SOC与Lambda.png
-% % --------------------------------------------------
-% if exist('results', 'var')
-%     fprintf('正在绘制图 9 (全体平均SOC vs Lambda)...\n');
-% 
-%     fig9 = figure('Name', '全体平均SOC与Lambda协同', 'Position', [200 450 1000 400], 'NumberTitle', 'off');
-% 
-%     % 1. 计算所有EV的 S_original 平均值 (按列求平均)
-%     % results.EV_S_original 维度为 [num_evs, total_steps]
-%     % 使用 mean 函数对第1维度（行，即不同EV）求平均
-%     avg_S_original = mean(results.EV_S_original, 1);
-% 
-%     % 2. 左侧坐标轴（平均 S_original）
-%     yyaxis left;
-%     h1 = plot(time_hours, avg_S_original, ...
-%         'LineWidth', 1.5, ...
-%         'Color', [0.8 0.2 0.2], ... % 红色系
-%         'DisplayName', '平均电量偏差度 (Avg S_{original})');
-%     ylabel('平均电量偏差度', 'FontSize', 14, 'Color', [0.8 0.2 0.2]);
-%     % 这里的Y轴范围可以根据实际数据的波动情况进行调整
-%     % ylim([-1, 1]); 
-%     set(gca, 'YColor', [0.8 0.2 0.2]);
-% 
-%     % 3. 右侧坐标轴（Lambda）
-%     yyaxis right;
-%     h2 = plot(time_hours, results.lambda, ...
-%         'LineWidth', 1.2, ...
-%         'Color', [0.2 0.4 0.8], ... % 蓝色系
-%         'DisplayName', '\lambda^*');
-%     ylabel('\lambda^*', 'FontSize', 14, 'Color', [0.2 0.4 0.8]);
-%     ylim([-2, 2]); % 保持与图3一致的范围，方便对比
-%     set(gca, 'YColor', [0.2 0.4 0.8]);
-% 
-%     % 4. 公共设置
-%     xlabel('时间 (小时)', 'FontSize', 14);
-%     set(gca, 'FontSize', 12);
-%     xlim([simulation_start_hour, simulation_start_hour + 24]); 
-%     set(gca, 'XTick', x_ticks, 'XTickLabel', x_tick_labels);
-%     grid on;
-% 
-%     % 图例
-%     legend([h1, h2], 'Location', 'northwest', 'FontSize', 12);
-%     title('Lambda 与 全体EV平均电量偏差度 关系图');
-% 
-%     % 5. 保存图像
-%     print(fig9, '全体平均SOC与Lambda.png', '-dpng', '-r600');
-% end
+
 %% --------------------------------------------------
 % [修改] 图 2: 聚合模型实时功率与实际统计功率对比 (拆分为全景图与局部放大图)
 % 保存为: 聚合功率计算验证_全景.png, 聚合功率计算验证_放大.emf
@@ -171,14 +123,14 @@ if exist('results', 'var') && isfield(results, 'EV_Power')
     
     hold off;
 
-    % 全景图坐标轴设置 (无标题)
-    xlabel('时间 (小时)', 'FontSize', 14);
-    ylabel('功率 (kW)', 'FontSize', 14);
-    set(gca, 'FontSize', 12);
+    % 全景图坐标轴设置 (字体放大)
+    xlabel('时间 (小时)', 'FontSize', 20);
+    ylabel('功率 (kW)', 'FontSize', 20);
+    set(gca, 'FontSize', 16);
     xlim([simulation_start_hour, simulation_start_hour + 24]); 
     set(gca, 'XTick', x_ticks, 'XTickLabel', x_tick_labels);
     grid on;
-    legend('Location', 'best', 'FontSize', 12);
+    legend('Location', 'best', 'FontSize', 16);
 
     % 保存全景图
     print(fig2_main, '聚合功率计算验证_全景.png', '-dpng', '-r600');
@@ -198,9 +150,8 @@ if exist('results', 'var') && isfield(results, 'EV_Power')
     xlim([t_zoom_start, t_zoom_end]);
     ylim([y_zoom_min, y_zoom_max]);
     
-    % 局部图坐标轴设置 (无标题)
-   
-    set(gca, 'FontSize', 22);
+    % 局部图坐标轴设置 (字体特大)
+    set(gca, 'FontSize', 24); % 保持较大的刻度字体
     grid off; % <--- 【修改】去除网格线
  
     % === 关键修改：保存为 EMF 矢量图 ===
@@ -234,7 +185,7 @@ if exist('results', 'var')
             'LineWidth', 1.2, ...
             'Color', [0.8 0.2 0.2], ...
             'DisplayName', '电量偏差度');
-        ylabel('电量偏差度 (-1~1)', 'FontSize', 16, 'Color', [0.8 0.2 0.2]);
+        ylabel('电量偏差度 (-1~1)', 'FontSize', 20, 'Color', [0.8 0.2 0.2]);
         ylim([-2 ,2]);
         set(gca, 'YColor', [0.8 0.2 0.2]);
 
@@ -244,18 +195,18 @@ if exist('results', 'var')
             'LineWidth', 1.2, ...
             'Color', [0.2 0.4 0.8], ...
             'DisplayName', '\lambda^*');
-        ylabel('\lambda^*', 'FontSize', 16, 'Color', [0.2 0.4 0.8]);
+        ylabel('\lambda^*', 'FontSize', 20, 'Color', [0.2 0.4 0.8]);
         % 使用与图2相同的动态Y轴范围
         ylim([-2 ,2]);
         set(gca, 'YColor', [0.2 0.4 0.8]);
 
-        % 公共设置
-        xlabel('时间 (小时)', 'FontSize', 16);
-        set(gca, 'FontSize', 12);
+        % 公共设置 (字体放大)
+        xlabel('时间 (小时)', 'FontSize', 20);
+        set(gca, 'FontSize', 16);
         xlim([simulation_start_hour, simulation_start_hour + 24]); % [6, 30]
         set(gca, 'XTick', x_ticks, 'XTickLabel', x_tick_labels);
         grid on;
-        legend([main_soc_ind, main_lambda_ind], 'Location', 'northwest', 'FontSize', 14);
+        legend([main_soc_ind, main_lambda_ind], 'Location', 'northwest', 'FontSize', 16);
         
         % 保存图像 (无标题，高DPI，中文名)
         print(fig3, '单体SOC与Lambda.png', '-dpng', '-r600');
@@ -290,14 +241,14 @@ if exist('results', 'var')
             'DisplayName', '实际电量 (Actual)');
         hold off;
 
-        % 坐标轴和标签设置
-        xlabel('时间 (小时)', 'FontSize', 14);
-        ylabel('电量 (kWh)', 'FontSize', 14);
-        set(gca, 'FontSize', 12);
+        % 坐标轴和标签设置 (字体放大)
+        xlabel('时间 (小时)', 'FontSize', 20);
+        ylabel('电量 (kWh)', 'FontSize', 20);
+        set(gca, 'FontSize', 16);
         xlim([simulation_start_hour, simulation_start_hour + 24]); % [6, 30]
         set(gca, 'XTick', x_ticks, 'XTickLabel', x_tick_labels);
         grid on;
-        legend('Location', 'best', 'FontSize', 12);
+        legend('Location', 'best', 'FontSize', 16);
         
         % 保存图像 (无标题，高DPI，中文名)
         print(fig4, '单体电量对比.png', '-dpng', '-r600');
@@ -320,22 +271,22 @@ if exist('results', 'var')
         t_in_h = results.EV_t_in / 60;
         t_dep_h = results.EV_t_dep / 60;
         
-        % 子图1: 入网时间分布
+        % 子图1: 入网时间分布 (字体放大)
         subplot(1, 2, 1);
         histogram(t_in_h, 24, 'Normalization', 'pdf', 'FaceColor', [0.2 0.6 0.8], 'EdgeColor', 'none');
         hold on;
-        xlabel('入网时间 (小时)', 'FontSize', 12);
-        ylabel('概率密度', 'FontSize', 12);
+        xlabel('入网时间 (小时)', 'FontSize', 20);
+        ylabel('概率密度', 'FontSize', 20);
         grid on;
-        set(gca, 'FontSize', 10);
+        set(gca, 'FontSize', 16);
         
-        % 子图2: 离网时间分布
+        % 子图2: 离网时间分布 (字体放大)
         subplot(1, 2, 2);
         histogram(t_dep_h, 24, 'Normalization', 'pdf', 'FaceColor', [0.8 0.4 0.2], 'EdgeColor', 'none');
-        xlabel('离网时间 (小时)', 'FontSize', 12);
-        ylabel('概率密度', 'FontSize', 12);
+        xlabel('离网时间 (小时)', 'FontSize', 20);
+        ylabel('概率密度', 'FontSize', 20);
         grid on;
-        set(gca, 'FontSize', 10);
+        set(gca, 'FontSize', 16);
         
         % 保存图像
         print(fig5, '用户行为分布.png', '-dpng', '-r600');
@@ -365,14 +316,14 @@ if exist('results', 'var')
         
         hold off;
         
-        % 坐标轴设置
-        xlabel('时间 (小时)', 'FontSize', 14);
-        ylabel('功率 (kW)', 'FontSize', 14);
-        set(gca, 'FontSize', 12);
+        % 坐标轴设置 (字体放大)
+        xlabel('时间 (小时)', 'FontSize', 20);
+        ylabel('功率 (kW)', 'FontSize', 20);
+        set(gca, 'FontSize', 16);
         xlim([simulation_start_hour, simulation_start_hour + 24]); 
         set(gca, 'XTick', x_ticks, 'XTickLabel', x_tick_labels);
         grid on;
-        legend('Location', 'best', 'FontSize', 12);
+        legend('Location', 'best', 'FontSize', 16);
         
         % 保存图像
         print(fig6, '聚合调节边界.png', '-dpng', '-r600');
@@ -395,7 +346,7 @@ line_colors = {'r', 'g', 'b'};
 fig7 = figure('Name', '不同调节时长上调节能力对比', 'Position', [400 400 1000 400], 'NumberTitle', 'off');
 hold on;
 
-% 绘制零线 - 【关键修改】添加 'HandleVisibility', 'off' 以避免 "data1" 图例
+% 绘制零线
 yline(0, 'k-', 'LineWidth', 1, 'HandleVisibility', 'off');
 
 file_found_count = 0;
@@ -412,7 +363,6 @@ for i = 1:length(file_list)
             tmp_res = tmp_data.results;
             
             % 为当前文件单独计算时间轴
-            % 假设所有文件都从 simulation_start_hour 开始
             tmp_total_steps = length(tmp_res.EV_Up);
             tmp_time_hours = ((0:tmp_total_steps-1) * current_dt / 60) + simulation_start_hour;
 
@@ -433,16 +383,16 @@ end
 if file_found_count > 0
     hold off;
 
-    % 坐标轴设置
-    xlabel('时间 (小时)', 'FontSize', 14);
-    ylabel('上调节潜力 (kW)', 'FontSize', 14);
-    set(gca, 'FontSize', 12);
+    % 坐标轴设置 (字体放大)
+    xlabel('时间 (小时)', 'FontSize', 20);
+    ylabel('上调节潜力 (kW)', 'FontSize', 20);
+    set(gca, 'FontSize', 16);
     xlim([simulation_start_hour, simulation_start_hour + 24]); % [6, 30]
     set(gca, 'XTick', x_ticks, 'XTickLabel', x_tick_labels);
     grid on;
     
-    % 图例设置
-    legend('Location', 'west', 'FontSize', 12);
+    % 图例设置 (字体放大)
+    legend('Location', 'west', 'FontSize', 16);
 
     % 保存图像
     print(fig7, '不同调节时长上调节能力对比.png', '-dpng', '-r600');
@@ -461,7 +411,7 @@ fprintf('正在绘制图 8 (不同调节时长下调节能力对比)...\n');
 fig8 = figure('Name', '不同调节时长下调节能力对比', 'Position', [400 100 1000 400], 'NumberTitle', 'off');
 hold on;
 
-% 绘制零线 - 【关键修改】添加 'HandleVisibility', 'off' 以避免 "data1" 图例
+% 绘制零线
 yline(0, 'k-', 'LineWidth', 1, 'HandleVisibility', 'off');
 
 file_found_count = 0;
@@ -482,9 +432,9 @@ for i = 1:length(file_list)
             tmp_total_steps = length(tmp_res.EV_Down);
             tmp_time_hours = ((0:tmp_total_steps-1) * current_dt / 60) + simulation_start_hour;
 
-            % 绘制下调潜力 (虚线，为了美观也可用实线，这里使用实线以清晰展示)
+            % 绘制下调潜力 (实线以清晰展示)
             plot(tmp_time_hours, tmp_res.EV_Down, ...
-                'LineStyle', '-', ...  % 改为实线更清晰，因为分图了
+                'LineStyle', '-', ... 
                 'Color', line_colors{i}, ...
                 'LineWidth', 1.5, ...
                 'DisplayName', [legend_labels{i} ' 下调 (Down)']);
@@ -495,16 +445,16 @@ end
 if file_found_count > 0
     hold off;
 
-    % 坐标轴设置
-    xlabel('时间 (小时)', 'FontSize', 14);
-    ylabel('下调节潜力 (kW)', 'FontSize', 14);
-    set(gca, 'FontSize', 12);
+    % 坐标轴设置 (字体放大)
+    xlabel('时间 (小时)', 'FontSize', 20);
+    ylabel('下调节潜力 (kW)', 'FontSize', 20);
+    set(gca, 'FontSize', 16);
     xlim([simulation_start_hour, simulation_start_hour + 24]); % [6, 30]
     set(gca, 'XTick', x_ticks, 'XTickLabel', x_tick_labels);
     grid on;
     
-    % 图例设置
-    legend('Location', 'west', 'FontSize', 12);
+    % 图例设置 (字体放大)
+    legend('Location', 'west', 'FontSize', 16);
 
     % 保存图像
     print(fig8, '不同调节时长下调节能力对比.png', '-dpng', '-r600');

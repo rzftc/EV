@@ -39,25 +39,25 @@ assert(mod(num_long_steps, 24*(60/dt_long)) == 0, '长时间步数需为24h整�
 %% 4. 结果存储结构
 num_evs = length(EVs);
 results = struct(...
-    'P_agg',         zeros(1, total_steps), ...
-    'P_agg_ptcp',    zeros(1, total_steps), ... % 参与聚合的功率
-    'P_agg_actual',  zeros(1, total_steps), ... % 实际聚合功率(含失约)
-    'P_base',        zeros(1, total_steps), ...
-    'S_agg',         zeros(1, total_steps), ...
-    'lambda',        zeros(1, total_steps), ...
+    'P_agg',          zeros(1, total_steps), ...
+    'P_agg_ptcp',     zeros(1, total_steps), ... % 参与聚合的功率
+    'P_agg_actual',   zeros(1, total_steps), ... % 实际聚合功率(含失约)
+    'P_base',         zeros(1, total_steps), ...
+    'S_agg',          zeros(1, total_steps), ...
+    'lambda',         zeros(1, total_steps), ...
     'EV_S_original', zeros(num_evs, total_steps), ...
-    'EV_S_mod',      zeros(num_evs, total_steps), ...
-    'm3',            zeros(num_evs, 1), ...
-    'P_tar',         zeros(1, total_steps), ...
-    'P_cu',          zeros(1, total_steps), ...
-    'EV_Up',         zeros(1, total_steps), ... % 上调潜力(合约)
-    'EV_Down',       zeros(1, total_steps), ... % 下调潜力(合约)
-    'EV_Power',      zeros(1, total_steps), ... % 聚合模型实时功率
-    'EV_Up_Individual_Sum',   zeros(1, total_steps), ... % 上调潜力(物理)
+    'EV_S_mod',       zeros(num_evs, total_steps), ...
+    'm3',             zeros(num_evs, 1), ...
+    'P_tar',          zeros(1, total_steps), ...
+    'P_cu',           zeros(1, total_steps), ...
+    'EV_Up',          zeros(1, total_steps), ... % 上调潜力(合约)
+    'EV_Down',        zeros(1, total_steps), ... % 下调潜力(合约)
+    'EV_Power',       zeros(1, total_steps), ... % 聚合模型实时功率
+    'EV_Up_Individual_Sum',    zeros(1, total_steps), ... % 上调潜力(物理)
     'EV_Down_Individual_Sum', zeros(1, total_steps),  ... % 下调潜力(物理)
     ...
-    'SOC_EV',             zeros(num_evs, total_steps), ... 
-    'EV_Up_Individual',   zeros(num_evs, total_steps), ... 
+    'SOC_EV',              zeros(num_evs, total_steps), ... 
+    'EV_Up_Individual',    zeros(num_evs, total_steps), ... 
     'EV_Down_Individual', zeros(num_evs, total_steps), ...
     ...
     'EV_E_actual',        zeros(num_evs, total_steps), ... % 实际电量
@@ -337,9 +337,9 @@ for long_idx = 1:num_long_steps
                     % 聚合计算使用合约时间
                     t_dep_agg_h = mean([group_EVs.t_dep_contract]) / 60; 
                     
-                    p_on_agg = sum([group_EVs.P_N]);           
+                    p_on_agg = sum([group_EVs.P_N]);            
                     P_base_agg = sum(arrayfun(@(ev) ev.P_base_sequence(step_idx), group_EVs)); 
-                    eta_agg = mean([group_EVs.eta]);           
+                    eta_agg = mean([group_EVs.eta]);            
         
                     [d_plus, d_minus] = calculateEVAdjustmentPotentia_new(...
                         E_reg_min_agg, E_reg_max_agg, E_current_agg, ...
@@ -413,13 +413,13 @@ x_conf = [time_points_absolute, fliplr(time_points_absolute)];
 y_conf_up = [results.EV_Up, fliplr(results.EV_Up_Individual_Sum)];
 fill(x_conf, y_conf_up, 'r', 'FaceAlpha', 0.1, 'EdgeColor', 'none', 'DisplayName', '失约造成的容量缺口');
 
-% 坐标轴与图例 (无标题)
-ylabel('上调潜力 (kW)', 'FontName', defaultFont);
-xlabel('时间 (小时)', 'FontName', defaultFont); 
-legend('Location', 'best', 'FontName', defaultFont); 
+% 坐标轴与图例 (字体放大)
+ylabel('上调潜力 (kW)', 'FontName', defaultFont, 'FontSize', 20);
+xlabel('时间 (小时)', 'FontName', defaultFont, 'FontSize', 20); 
+legend('Location', 'best', 'FontName', defaultFont, 'FontSize', 12); 
 grid on; 
 xlim([simulation_start_hour, simulation_end_hour]);
-set(gca, 'FontName', defaultFont);
+set(gca, 'FontName', defaultFont, 'FontSize', 16);
 
 % 保存上调图 (使用 saveas)
 saveas(f1_up, 'EV用户失约调节能力验证_上调.png');
@@ -437,20 +437,20 @@ plot(time_points_absolute, results.EV_Down_Individual_Sum, 'b-', 'LineWidth', 1.
 y_conf_down = [results.EV_Down, fliplr(results.EV_Down_Individual_Sum)];
 fill(x_conf, y_conf_down, 'b', 'FaceAlpha', 0.1, 'EdgeColor', 'none', 'DisplayName', '失约造成的容量缺口');
 
-% 坐标轴与图例 (无标题)
-ylabel('下调潜力 (kW)', 'FontName', defaultFont); 
-xlabel('时间 (小时)', 'FontName', defaultFont);
-legend('Location', 'best', 'FontName', defaultFont); 
+% 坐标轴与图例 (字体放大)
+ylabel('下调潜力 (kW)', 'FontName', defaultFont, 'FontSize', 20); 
+xlabel('时间 (小时)', 'FontName', defaultFont, 'FontSize', 20);
+legend('Location', 'best', 'FontName', defaultFont, 'FontSize', 16); 
 grid on; 
 xlim([simulation_start_hour, simulation_end_hour]);
-set(gca, 'FontName', defaultFont);
+set(gca, 'FontName', defaultFont, 'FontSize', 16);
 
 % 保存下调图 (使用 saveas)
 saveas(f1_down, 'EV用户失约调节能力验证_下调.png');
 saveas(f1_down, 'EV用户失约调节能力验证_下调.emf');
 
 % -----------------------------------------------------------
-% 3. 聚合功率偏差验证图 (保持不变)
+% 3. 聚合功率偏差验证图 (保持不变，仅调整字体)
 % -----------------------------------------------------------
 f2 = figure('Name', 'EV用户失约行为对聚合功率的影响验证', 'Color', 'w');
 
@@ -469,10 +469,10 @@ y_conf_power = [results.P_agg, fliplr(results.P_agg_actual)];
 fill(x_conf, y_conf_power, 'r', 'FaceAlpha', 0.15, 'EdgeColor', 'none', ...
     'DisplayName', '失约造成的功率偏差');
 
-% 坐标设置
-ylabel('聚合功率 (kW)', 'FontName', defaultFont, 'FontSize', 12); 
-xlabel('时间 (小时)', 'FontName', defaultFont, 'FontSize', 12);
-legend('Location', 'best', 'FontName', defaultFont, 'FontSize', 10); 
+% 坐标设置 (字体放大)
+ylabel('聚合功率 (kW)', 'FontName', defaultFont, 'FontSize', 20); 
+xlabel('时间 (小时)', 'FontName', defaultFont, 'FontSize', 20);
+legend('Location', 'best', 'FontName', defaultFont, 'FontSize', 12); 
 grid on; box on;
 
 % 限制时间轴 (Day1 8:00 - Day2 8:00)
@@ -480,7 +480,7 @@ xlim([8, 32]);
 xticks(8:4:32);
 xticklabels({'08:00','12:00','16:00','20:00','00:00','04:00','08:00'});
 
-set(gca, 'FontName', defaultFont, 'FontSize', 11);
+set(gca, 'FontName', defaultFont, 'FontSize', 16);
 
 % 保存 (使用 saveas)
 saveas(f2, 'EV用户失约聚合功率验证.png');
