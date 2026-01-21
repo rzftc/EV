@@ -37,14 +37,6 @@ time_hours = ((0:total_steps-1) * dt_short / 60) + simulation_start_hour;
 x_ticks = [8, 14, 20, 26, 32];
 x_tick_labels = {'D1 08:00', 'D1 14:00', 'D1 20:00', 'D2 02:00', 'D2 08:00'};
 
-% 绘制背景目标功率
-figure(fig1); 
-area(time_hours, base_results.P_tar, ...
-    'FaceColor', [0.8 0.8 0.8], ...
-    'FaceAlpha', 0.3, ...
-    'EdgeColor', 'none', ...
-    'DisplayName', '目标功率 (P_{tar})');
-
 %% 3. 循环加载数据并绘图
 results = base_results; 
 max_agg_powers = zeros(1, length(incentive_prices));
