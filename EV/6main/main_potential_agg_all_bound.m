@@ -12,10 +12,6 @@ incentive_prices = linspace(0, 50, 10);
 % 开始批量仿真循环
 for sim_idx = 1:length(incentive_prices)
     current_incentive_price = incentive_prices(sim_idx);
-
-    % 重置随机种子
-    % 确保每次仿真中，rand()生成的序列对于同一辆车是相同的
-    % 这样可以保证如果某辆车在价格低时参与了，价格高时(概率更高)必然也会参与
     rng(2024);
 
     fprintf('\n==========================================================\n');
@@ -34,7 +30,7 @@ for sim_idx = 1:length(incentive_prices)
 
     %% 时间参数定义
     dt_short = 5;     % 短时间步长 (分钟)
-    dt_long = 60;       % 长时间步长 (分钟)
+    dt_long = 15;       % 长时间步长 (分钟)
     simulation_start_hour = 8;
     simulation_end_hour   = 32;
     dt = dt_short / 60;       % 短步长 (小时)
@@ -102,7 +98,7 @@ for sim_idx = 1:length(incentive_prices)
 
     p_min = 15; p_max = 50;
     p_min_prime = 10; p_max_prime = 40;
-    base_Price_vec = 30 * ones(num_evs, 1);
+    base_Price_vec = 26 * ones(num_evs, 1);
 
     % ---------------------------------------------------------
     % 使用当前循环的激励价格覆盖原有数据

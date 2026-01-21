@@ -11,12 +11,12 @@ end
 dpi = 600;  % ====== 新增：高DPI（可按需改为300/600/1200等） ======
 
 der_files = {
-    'DER1.mat', 'EV';
+    % 'DER1.mat', 'EV';
     'DER2.mat', 'AC';
     'DER3.mat', 'PV';
     'DER4.mat', 'P2G';
     'DER5.mat', 'IDC';
-    'DER6.mat', 'Industry'
+    % 'DER6.mat', 'Industry'
 };
 
 fprintf('==================================================\n');

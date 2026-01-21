@@ -13,12 +13,12 @@ set(0, 'DefaultLegendFontName', 'Microsoft YaHei');
 
 % 资源文件列表 (与 verify_Joint_Potential_Accuracy.m 保持一致)
 der_files = {
-    'DER1.mat', 'EV';
+    % 'DER1.mat', 'EV';
     'DER2.mat', 'AC';
     'DER3.mat', 'PV';
     'DER4.mat', 'P2G';
     'DER5.mat', 'IDC';
-    'DER6.mat', 'Industry'
+    % 'DER6.mat', 'Industry'
 };
 
 %% 2. 读取并聚合当前基线数据
@@ -103,7 +103,7 @@ ratio_peak = 0.8;      % 调峰潜力是调频的0.8倍
 noise_level = 0.05;    % 随机波动幅度 (5%)
 
 % --- 2030年 (100倍) ---
-scale_2030 = 100;
+scale_2030 = 300;
 Up_2030_Freq = Total_Up_Base * scale_2030;
 Down_2030_Freq = Total_Down_Base * scale_2030;
 % 2030年调峰 (加波动)
@@ -111,7 +111,7 @@ Up_2030_Peak = Up_2030_Freq * ratio_peak + (Up_2030_Freq * ratio_peak * noise_le
 Down_2030_Peak = Down_2030_Freq * ratio_peak + (Down_2030_Freq * ratio_peak * noise_level) .* randn(size(Down_2030_Freq));
 
 % --- 2035年 (120倍) ---
-scale_2035 = 120;
+scale_2035 = 360;
 Up_2035_Freq = Total_Up_Base * scale_2035;
 Down_2035_Freq = Total_Down_Base * scale_2035;
 % 2035年调峰 (加波动)
@@ -119,7 +119,7 @@ Up_2035_Peak = Up_2035_Freq * ratio_peak + (Up_2035_Freq * ratio_peak * noise_le
 Down_2035_Peak = Down_2035_Freq * ratio_peak + (Down_2035_Freq * ratio_peak * noise_level) .* randn(size(Down_2035_Freq));
 
 % --- 2040年 (135倍) ---
-scale_2040 = 135;
+scale_2040 = 405;
 Up_2040_Freq = Total_Up_Base * scale_2040;
 Down_2040_Freq = Total_Down_Base * scale_2040;
 % 2040年调峰 (加波动)

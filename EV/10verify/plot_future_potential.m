@@ -12,12 +12,12 @@ set(0, 'DefaultLegendFontName', 'Microsoft YaHei');
 
 % 资源文件列表 (与 verify_Joint_Potential_Accuracy.m 保持一致)
 der_files = {
-    'DER1.mat', 'EV';
+    % 'DER1.mat', 'EV';
     'DER2.mat', 'AC';
     'DER3.mat', 'PV';
     'DER4.mat', 'P2G';
     'DER5.mat', 'IDC';
-    'DER6.mat', 'Industry'
+    % 'DER6.mat', 'Industry'
 };
 
 %% 2. 读取并聚合当前基线数据
@@ -95,17 +95,17 @@ fprintf('基线数据聚合完成。时间步数: %d\n', min_len);
 
 %% 3. 未来场景推演
 % 2030年: 100倍
-scale_2030 = 100;
+scale_2030 = 300;
 Up_2030 = Total_Up_Base * scale_2030;
 Down_2030 = Total_Down_Base * scale_2030;
 
 % 2035年: 120倍
-scale_2035 = 120;
+scale_2035 = 360;
 Up_2035 = Total_Up_Base * scale_2035;
 Down_2035 = Total_Down_Base * scale_2035;
 
 % 2040年: 135倍
-scale_2040 = 135;
+scale_2040 = 405;
 Up_2040 = Total_Up_Base * scale_2040;
 Down_2040 = Total_Down_Base * scale_2040;
 
