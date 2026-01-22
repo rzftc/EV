@@ -3,10 +3,9 @@ clear;
 close all;
 
 %% 1. 参数设置
-incentive_prices = linspace(0, 50, 10); 
+incentive_prices = linspace(0, 60, 10); 
 dt_short = 5; 
 simulation_start_hour = 8; 
-selected_ev = 825; 
 plot_colors = jet(length(incentive_prices));
 
 fprintf('准备处理 %d 个激励场景...\n', length(incentive_prices));
@@ -43,7 +42,7 @@ max_agg_powers = zeros(1, length(incentive_prices));
 
 for i = 1:length(incentive_prices)
     price = incentive_prices(i);
-    fileName = sprintf('results_incentive_%.2f_1000_bound.mat', price);
+    fileName = sprintf('results_incentive_%.2f_1000_bound_06.mat', price);
     
     if exist(fileName, 'file')
         data = load(fileName);
@@ -61,21 +60,21 @@ for i = 1:length(incentive_prices)
         plot(time_hours, results.P_agg, ...
             'LineWidth', 1.5, ...
             'Color', plot_colors(i, :), ...
-            'DisplayName', sprintf('%.2f 元/kW', price_yuan));
+            'DisplayName', sprintf('%.2f 元/kWh', price_yuan));
 
         % 绘制上调能力
         figure(fig_up);
         plot(time_hours, results.EV_Up_Individual_Sum, ...
             'LineWidth', 1.5, ...
             'Color', plot_colors(i, :), ...
-            'DisplayName', sprintf('%.2f 元/kW', price_yuan));
+            'DisplayName', sprintf('%.2f 元/kWh', price_yuan));
 
         % 绘制下调能力
         figure(fig_down);
         plot(time_hours, results.EV_Down_Individual_Sum, ...
             'LineWidth', 1.5, ...
             'Color', plot_colors(i, :), ...
-            'DisplayName', sprintf('%.2f 元/kW', price_yuan));
+            'DisplayName', sprintf('%.2f 元/kWh', price_yuan));
             
     else
         fprintf('警告: 文件 %s 不存在，跳过。\n', fileName);
@@ -144,11 +143,11 @@ print(fig_down, '多激励下调能力对比.png', '-dpng', '-r600');
 % --- 图 9: 激励特性曲线 (已应用修正数据) ---
 fig_curve = figure('Name', 'EV激励价格-聚合整体功率特性', 'Position', [250 250 800 500], 'NumberTitle', 'off');
 plot(incentive_prices / 100, max_agg_powers, 'bo-', 'LineWidth', 2.5, 'MarkerSize', 12, 'MarkerFaceColor', 'b');
-xlabel('激励电价 (元/kW)', 'FontSize', 23);
+xlabel('激励电价 (元/kWh)', 'FontSize', 23);
 ylabel('聚合整体功率峰值 (kW)', 'FontSize', 23);
 set(gca, 'FontSize', 19);
 grid on;
 set(fig_curve, 'Renderer', 'painters');
 print(fig_curve, 'EV激励价格-聚合整体功率特性.png', '-dpng', '-r600');
 
-fprintf('后续图表将基于最后一个场景 (激励 %.2f 元/kW) 绘制。\n', incentive_prices(end)/100);
+fprintf('后续图表将基于最后一个场景 (激励 %.2f 元/kWh) 绘制。\n', incentive_prices(end)/100);

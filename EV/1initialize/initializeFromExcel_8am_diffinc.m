@@ -1,4 +1,4 @@
-function [EVs, t_sim, dt_short, dt_long, P_tar] = initializeFromExcel_8am(filePath)
+function [EVs, t_sim, dt_short, dt_long, P_tar] = initializeFromExcel_8am_diffinc(filePath)
     % --- 参数校验 ---
     if ~exist(filePath, 'file')
         error('EV参数文件不存在: %s', filePath);
@@ -10,7 +10,7 @@ function [EVs, t_sim, dt_short, dt_long, P_tar] = initializeFromExcel_8am(filePa
     % --- 基础参数 ---
     t_sim = 24*60;      % 模拟总时长 (分钟）
     dt_short = 5;     % 短时间步长 (分钟)
-    dt_long = 60;       % 长时间步长 (分钟)
+    dt_long = 15;       % 长时间步长 (分钟)
 
     % --- 创建EV结构体模板 ---
     template = struct(...
