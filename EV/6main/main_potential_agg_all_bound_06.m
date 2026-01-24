@@ -98,7 +98,7 @@ for sim_idx = 1:length(incentive_prices)
 
     p_min = 18; p_max = 60;
     p_min_prime = 12; p_max_prime = 48;
-    base_Price_vec = 31.2 * ones(num_evs, 1);
+    base_Price_vec = 30 * ones(num_evs, 1);
 
     % ---------------------------------------------------------
     % 使用当前循环的激励价格覆盖原有数据
@@ -124,7 +124,7 @@ for sim_idx = 1:length(incentive_prices)
         % [修改点 - 参数逻辑] deltaE 在 deltaE_down 和 deltaE_up 之间随机生成
         % 并修正 r 值
         % =========================================================
-        min_safe_r = 0.05;
+        min_safe_r = 0;
         idx = participating_indices;
         d_up = deltaE_up_vec(idx);
         d_down = deltaE_down_vec(idx);
@@ -204,6 +204,12 @@ for sim_idx = 1:length(incentive_prices)
             t_dep_h, t_in_h, dt, ...
             EVs_for_baseline(i).r, EVs_for_baseline(i).P_N, ...
             EVs_for_baseline(i).SOC_original, num_time_points, time_points_absolute);
+        % EVs_for_baseline(i).P_base_sequence = EVbaseP_Average(...
+        %     EVs_for_baseline(i).C, EVs_for_baseline(i).eta,...
+        %     EVs_for_baseline(i).E_tar_original, EVs_for_baseline(i).E_ini,...
+        %     t_dep_h, t_in_h, dt, ...
+        %     EVs_for_baseline(i).r, EVs_for_baseline(i).P_N, ...
+        %     EVs_for_baseline(i).SOC_original, num_time_points, time_points_absolute);
     end
     for i = 1:num_evs
         EVs(i).P_base_sequence = EVs_for_baseline(i).P_base_sequence;
