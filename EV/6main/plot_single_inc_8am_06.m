@@ -20,7 +20,8 @@ end
 % 仿真参数 (必须与 main_potential_agg_ind.m 匹配)
 dt_short = 5; % 默认短步长为 5 分钟
 simulation_start_hour = 8; % 仿真开始时间
-selected_ev = 945; % 选择绘制的EV编号
+selected_ev = 135; % 选择绘制的EV编号
+% selected_ev = 945; % 选择绘制的EV编号
 
 % 计算时间轴 (小时) - 这里的 total_steps 基于 results 计算
 if exist('results', 'var')

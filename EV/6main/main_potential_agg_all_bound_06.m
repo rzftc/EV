@@ -198,18 +198,18 @@ for sim_idx = 1:length(incentive_prices)
         t_dep_h = EVs_for_baseline(i).t_dep / 60;
         t_in_h = EVs_for_baseline(i).t_in / 60;
 
-        % EVs_for_baseline(i).P_base_sequence = EVbaseP_ChargeUntilFull(...
-        %     EVs_for_baseline(i).C, EVs_for_baseline(i).eta,...
-        %     EVs_for_baseline(i).E_tar_original, EVs_for_baseline(i).E_ini,...
-        %     t_dep_h, t_in_h, dt, ...
-        %     EVs_for_baseline(i).r, EVs_for_baseline(i).P_N, ...
-        %     EVs_for_baseline(i).SOC_original, num_time_points, time_points_absolute);
-        EVs_for_baseline(i).P_base_sequence = EVbaseP_Average(...
+        EVs_for_baseline(i).P_base_sequence = EVbaseP_ChargeUntilFull(...
             EVs_for_baseline(i).C, EVs_for_baseline(i).eta,...
             EVs_for_baseline(i).E_tar_original, EVs_for_baseline(i).E_ini,...
             t_dep_h, t_in_h, dt, ...
             EVs_for_baseline(i).r, EVs_for_baseline(i).P_N, ...
             EVs_for_baseline(i).SOC_original, num_time_points, time_points_absolute);
+        % EVs_for_baseline(i).P_base_sequence = EVbaseP_Average(...
+        %     EVs_for_baseline(i).C, EVs_for_baseline(i).eta,...
+        %     EVs_for_baseline(i).E_tar_original, EVs_for_baseline(i).E_ini,...
+        %     t_dep_h, t_in_h, dt, ...
+        %     EVs_for_baseline(i).r, EVs_for_baseline(i).P_N, ...
+        %     EVs_for_baseline(i).SOC_original, num_time_points, time_points_absolute);
     end
     for i = 1:num_evs
         EVs(i).P_base_sequence = EVs_for_baseline(i).P_base_sequence;
@@ -243,7 +243,10 @@ for sim_idx = 1:length(incentive_prices)
     %% 外层循环（长时间步长）
     for long_idx = 1:num_long_steps
         t_long_start_minute = (long_idx - 1) * dt_long_minutes;
-
+        t_current_long_abs_minute = t_long_start_minute + simulation_start_hour * 60;
+        % parfor i = 1:num_evs
+        %     EVs(i) = updateLockState_unlock(EVs(i), t_current_long_abs_minute); 
+        % end
         %% 长时间步处理
         [lambda_star] = aggregateEVs(EVs, P_tar(long_idx));
         [~, S_agg_next] = calculateVirtualSOC_agg(EVs, dt_long_minutes);
@@ -270,12 +273,12 @@ for sim_idx = 1:length(incentive_prices)
 
             %% 更新EV状态 (并行处理)
             EVs_in_parfor = EVs;
-
+            
             parfor i = 1:num_evs
                 EV = EVs_in_parfor(i);
+                EV = updateLockState_unlock(EV, t_current_minute_abs);
                 if EV.ptcp
-                    EV = updateLockState(EV, t_current_minute_abs); 
-
+                    
                     EV_for_handle = EV;
                     EV_temp_with_handle = generateDemandCurve(EV_for_handle);
                     current_P_val = 0;
@@ -292,7 +295,7 @@ for sim_idx = 1:length(incentive_prices)
                         end
                     end
                     EV.P_current = current_P_val;
-
+                    EV = updateLockState_unlock(EV, t_current_minute_abs);
                     EV = calculateVirtualSOC_upgrade(EV, t_current_minute_abs, dt_minutes);
 
                     if EV.t_dep > EV.t_in
