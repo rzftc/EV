@@ -103,7 +103,7 @@ ratio_peak = 0.8;      % 调峰潜力是调频的0.8倍
 noise_level = 0.05;    % 随机波动幅度 (5%)
 
 % --- 2030年 (100倍) ---
-scale_2030 = 300;
+scale_2030 = 30;
 Up_2030_Freq = Total_Up_Base * scale_2030;
 Down_2030_Freq = Total_Down_Base * scale_2030;
 % 2030年调峰 (加波动)
@@ -111,7 +111,7 @@ Up_2030_Peak = Up_2030_Freq * ratio_peak + (Up_2030_Freq * ratio_peak * noise_le
 Down_2030_Peak = Down_2030_Freq * ratio_peak + (Down_2030_Freq * ratio_peak * noise_level) .* randn(size(Down_2030_Freq));
 
 % --- 2035年 (120倍) ---
-scale_2035 = 360;
+scale_2035 = 36;
 Up_2035_Freq = Total_Up_Base * scale_2035;
 Down_2035_Freq = Total_Down_Base * scale_2035;
 % 2035年调峰 (加波动)
@@ -119,7 +119,7 @@ Up_2035_Peak = Up_2035_Freq * ratio_peak + (Up_2035_Freq * ratio_peak * noise_le
 Down_2035_Peak = Down_2035_Freq * ratio_peak + (Down_2035_Freq * ratio_peak * noise_level) .* randn(size(Down_2035_Freq));
 
 % --- 2040年 (135倍) ---
-scale_2040 = 405;
+scale_2040 = 38;
 Up_2040_Freq = Total_Up_Base * scale_2040;
 Down_2040_Freq = Total_Down_Base * scale_2040;
 % 2040年调峰 (加波动)
