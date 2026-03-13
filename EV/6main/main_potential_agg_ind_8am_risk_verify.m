@@ -411,7 +411,7 @@ plot(time_points_absolute, results.EV_Up_Individual_Sum, 'r-', 'LineWidth', 1.5,
 % 偏差填充
 x_conf = [time_points_absolute, fliplr(time_points_absolute)];
 y_conf_up = [results.EV_Up, fliplr(results.EV_Up_Individual_Sum)];
-fill(x_conf, y_conf_up, 'r', 'FaceAlpha', 0.1, 'EdgeColor', 'none', 'DisplayName', '失约造成的容量缺口');
+fill(x_conf, y_conf_up, 'r', 'FaceAlpha', 0.1, 'EdgeColor', 'none', 'DisplayName', '容量缺口');
 
 % 坐标轴与图例 (字体放大)
 ylabel('上调潜力 (kW)', 'FontName', defaultFont, 'FontSize', 20);
@@ -435,7 +435,7 @@ plot(time_points_absolute, results.EV_Down_Individual_Sum, 'b-', 'LineWidth', 1.
 
 % 偏差填充
 y_conf_down = [results.EV_Down, fliplr(results.EV_Down_Individual_Sum)];
-fill(x_conf, y_conf_down, 'b', 'FaceAlpha', 0.1, 'EdgeColor', 'none', 'DisplayName', '失约造成的容量缺口');
+fill(x_conf, y_conf_down, 'b', 'FaceAlpha', 0.1, 'EdgeColor', 'none', 'DisplayName', '容量缺口');
 
 % 坐标轴与图例 (字体放大)
 ylabel('下调潜力 (kW)', 'FontName', defaultFont, 'FontSize', 20); 
@@ -467,7 +467,7 @@ plot(time_points_absolute, results.P_agg_actual, 'r-', 'LineWidth', 1.5, ...
 x_conf = [time_points_absolute, fliplr(time_points_absolute)];
 y_conf_power = [results.P_agg, fliplr(results.P_agg_actual)];
 fill(x_conf, y_conf_power, 'r', 'FaceAlpha', 0.15, 'EdgeColor', 'none', ...
-    'DisplayName', '失约造成的功率偏差');
+    'DisplayName', '功率偏差');
 
 % 坐标设置 (字体放大)
 ylabel('聚合功率 (kW)', 'FontName', defaultFont, 'FontSize', 20); 
