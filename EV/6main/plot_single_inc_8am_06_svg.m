@@ -329,7 +329,7 @@ for i = 1:length(file_list)
             % 为当前文件单独计算时间轴
             tmp_total_steps = length(tmp_res.EV_Up);
             tmp_time_hours = ((0:tmp_total_steps-1) * current_dt / 60) + simulation_start_hour;
-            % 绘制上调潜力 (实线)
+            % 绘制上调能力 (实线)
             plot(tmp_time_hours, tmp_res.EV_Up, ...
                 'LineStyle', '-', ...
                 'Color', line_colors{i}, ...
@@ -346,7 +346,7 @@ if file_found_count > 0
     hold off;
     % 坐标轴设置 (字体放大)
     xlabel('时间 (小时)', 'FontSize', 20);
-    ylabel('上调节潜力 (kW)', 'FontSize', 20);
+    ylabel('上调节能力 (kW)', 'FontSize', 20);
     set(gca, 'FontSize', 16);
     xlim([simulation_start_hour, simulation_start_hour + 24]); % [6, 30]
     set(gca, 'XTick', x_ticks, 'XTickLabel', x_tick_labels);
@@ -387,7 +387,7 @@ for i = 1:length(file_list)
             % 为当前文件单独计算时间轴
             tmp_total_steps = length(tmp_res.EV_Down);
             tmp_time_hours = ((0:tmp_total_steps-1) * current_dt / 60) + simulation_start_hour;
-            % 绘制下调潜力 (实线以清晰展示)
+            % 绘制下调能力 (实线以清晰展示)
             plot(tmp_time_hours, tmp_res.EV_Down, ...
                 'LineStyle', '-', ... 
                 'Color', line_colors{i}, ...
@@ -400,7 +400,7 @@ if file_found_count > 0
     hold off;
     % 坐标轴设置 (字体放大)
     xlabel('时间 (小时)', 'FontSize', 20);
-    ylabel('下调节潜力 (kW)', 'FontSize', 20);
+    ylabel('下调节能力 (kW)', 'FontSize', 20);
     set(gca, 'FontSize', 16);
     xlim([simulation_start_hour, simulation_start_hour + 24]); % [6, 30]
     set(gca, 'XTick', x_ticks, 'XTickLabel', x_tick_labels);
